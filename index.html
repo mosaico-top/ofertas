@@ -87,6 +87,15 @@
             margin: 0; /* Remove margem padrão */
         }
 
+        /* Novo estilo para o título dentro da content-section */
+        .content-title {
+            font-size: 1.2em; /* Tamanho do título */
+            font-weight: bold;
+            margin-bottom: 5px; /* Espaço entre o título e a descrição */
+            color: #222; /* Cor mais escura para destaque */
+        }
+
+
         .cta-button {
             display: inline-block;
             background-color: #007BFF; /* Cor do botão - Azul */
@@ -94,7 +103,7 @@
             padding: 10px 25px; /* Padding do botão mais compacto */
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.9em; /* Tamanho da fonte do botão */
+            font-size: 0.9em; /* Tamanho do botão */
             border-radius: 5px;
             transition: background-color 0.3s ease;
             margin-top: 10px; /* Margem superior para separar do texto */
@@ -123,7 +132,7 @@
                 <img class="content-image" src="https://down-br.img.susercontent.com/file/br-11134207-7r98o-lqwdsk1yujhgf4.webp" alt="Oferta Top"/>
                 
                 <div class="text-and-button">
-                    <p class="content-text">
+                    <h3 class="content-title">Sabonete Esfoliante Facial Melu by Ruby Rose</h3> <p class="content-text">
                         O Sabonete Esfoliante Facial Melu by Ruby Rose Tutti Frutti é um produto de alta qualidade que oferece limpeza profunda e esfoliação suave para a pele.
                     </p>
                     
@@ -218,22 +227,35 @@
                 }
 
                 // --- Manipular o DOM (HTML) com os dados do CSV ---
-                // a. Seção do iframe
+                // 1. Atualizar o título da página (<title>)
+                const pageTitleElement = document.querySelector('head title');
+                if (pageTitleElement && rowData.título) { // Verifica se 'título' existe no rowData
+                    pageTitleElement.textContent = rowData.título;
+                }
+
+                // 2. Seção do iframe
                 const iframeElement = document.querySelector('#iframe-area .widget-content iframe');
                 if (iframeElement) {
                     if (rowData.link_chamada) {
                         iframeElement.src = rowData.link_chamada;
                     }
-                    // Opcional: usar 'descricao' ou outra coluna para o título do iframe
-                    if (rowData.descricao) { // Exemplo: usa a descrição para o título do iframe
-                         iframeElement.title = rowData.descricao.substring(0, 100); // Títulos geralmente são curtos
+                    if (rowData.título) { // Usa o campo 'título' para o atributo title do iframe
+                         iframeElement.title = rowData.título; 
+                    } else if (rowData.descricao) { // Fallback para a descrição se não houver título
+                        iframeElement.title = rowData.descricao.substring(0, 100); 
                     }
                 }
 
-                // b. Seção do conteúdo inferior (imagem, texto, botão)
+                // 3. Seção do conteúdo inferior (imagem, texto, botão)
                 const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
                 if (contentImage && rowData.img) {
                     contentImage.src = rowData.img;
+                }
+
+                // NOVO: Atualiza o título na content-section
+                const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
+                if (contentTitleElement && rowData.título) {
+                    contentTitleElement.textContent = rowData.título;
                 }
 
                 const contentText = document.querySelector('#content-area .content-wrapper .content-text');
