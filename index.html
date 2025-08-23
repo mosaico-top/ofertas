@@ -350,17 +350,20 @@
                 const randomOffer = offersData[randomIndex];
                 
                 if (randomOffer) {
-                    // Preenche os elementos com os dados da oferta
-                    contentTitleElement.textContent = randomOffer['item name'] || "Oferta Especial";
-                    
+                    // Usa os nomes de colunas fixos
+                    const itemName = randomOffer['item name'];
+                    const offerLink = randomOffer['offer link'];
                     const imgUrl = randomOffer['img'];
+
+                    contentTitleElement.textContent = itemName || "Oferta Especial";
+                    
                     if (imgUrl) {
                         contentImage.src = imgUrl;
                     } else {
                         contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
                     }
 
-                    ctaButton.href = randomOffer['offer link'] || "#";
+                    ctaButton.href = offerLink || "#";
                     // Adiciona o target=_blank e rel para segurança
                     ctaButton.setAttribute('target', '_blank');
                     ctaButton.setAttribute('rel', 'noopener noreferrer');
@@ -407,7 +410,7 @@
 
             if (!idFromUrl) {
                 // Se não houver ID, mostra um erro genérico e para a execução.
-                showStatus('error', 'Erro ao carregar os dados.');
+                showStatus('error', 'Erro ao carregar.');
                 return;
             }
 
@@ -445,7 +448,8 @@
                 }
             } catch (error) {
                 console.error("Erro fatal ao carregar a página principal:", error);
-                showStatus('error', 'Não foi possível carregar os dados. Verifique a URL e a planilha.');
+                // Exibe uma mensagem de erro mais genérica no catch.
+                showStatus('error', 'Erro ao carregar.');
             }
         }
 
