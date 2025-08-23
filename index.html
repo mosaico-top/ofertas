@@ -351,9 +351,9 @@
                 const randomOffer = offersData[randomIndex];
                 
                 if (randomOffer) {
-                    // Usa os nomes de colunas fixos
-                    const itemName = randomOffer['item name'];
-                    const offerLink = randomOffer['offer link'];
+                    // Usa os novos nomes de colunas com underscore
+                    const itemName = randomOffer['Item_Name'];
+                    const offerLink = randomOffer['Offer_Link'];
                     const imgUrl = randomOffer['img'];
 
                     contentTitleElement.textContent = itemName || "Oferta Especial";
@@ -418,8 +418,8 @@
             try {
                 const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
                 
-                // Encontra a linha correspondente ao ID da URL
-                const rowData = mainData.find(row => row.id && row.id.trim() === idFromUrl.trim());
+                // Encontra a linha correspondente ao ID da URL, agora usando 'Item_Id' ou 'id'
+                const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
 
                 if (!rowData) {
                     throw new Error(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
