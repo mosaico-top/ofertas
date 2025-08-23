@@ -313,6 +313,7 @@
                 if (lines.length <= 1) {
                     throw new Error("CSV não contém dados válidos.");
                 }
+                // Ajuste crítico: garante que os cabeçalhos são tratados sem espaços extras.
                 const headers = parseCsvLine(lines[0]).map(header => header.trim());
                 
                 const data = [];
