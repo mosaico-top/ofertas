@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mosaico Top - Carregando...</title>
-    <!-- Use uma imagem de favicon em um servidor CDN ou uma URL de placeholder para evitar falhas -->
-    <link rel="icon" href="https://placehold.co/32x32/E0E0E0/808080?text=F" type="image/png">
+    <!-- Favicon corrigido usando SVG inline para garantir que sempre carregue -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>" type="image/svg+xml">
     
     <style>
         /* --- ESTILOS GERAIS E LAYOUT --- */
@@ -461,8 +461,13 @@
 
             } catch (error) {
                 console.error("Erro fatal ao carregar a página principal:", error);
-                // Exibe uma mensagem de erro mais específica
-                showStatus('error', `Erro ao carregar o conteúdo: ${error.message}`);
+                
+                // Lógica para omitir a mensagem específica de "ID não encontrado"
+                let errorMessage = `Erro ao carregar o conteúdo: ${error.message}`;
+                if (error.message.includes("Nenhum dado encontrado para o ID:")) {
+                    errorMessage = "Conteúdo não encontrado.";
+                }
+                showStatus('error', errorMessage);
             }
         }
 
