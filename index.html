@@ -318,7 +318,8 @@
                 const csvText = await response.text();
                 const lines = csvText.split('\n').filter(line => line.trim() !== '');
                 if (lines.length <= 1) {
-                    throw new Error("CSV não contém dados válidos.");
+                    console.warn(`O CSV da URL "${url}" não contém dados válidos.`);
+                    return [];
                 }
                 const headers = parseCsvLine(lines[0]).map(header => header.trim());
                 
@@ -345,8 +346,12 @@
          */
         function updateOffer() {
             if (offersData.length === 0) {
-                console.warn("Nenhuma oferta disponível para exibir.");
+                console.warn("Nenhuma oferta disponível para exibir no carrossel.");
+                // Oculta o banner se não houver ofertas
+                contentWrapper.style.display = 'none';
                 return;
+            } else {
+                contentWrapper.style.display = 'flex'; // Garante que o banner seja exibido se houver ofertas
             }
 
             // Esconde o conteúdo para a transição suave
@@ -394,12 +399,20 @@
                 // Caso contrário, busca do servidor
                 console.log("Buscando novos dados de ofertas...");
                 try {
-                    offersData = await fetchAndParseCsv(OFFERS_CSV_URL);
+                    const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
+                    console.log(`Dados brutos de ofertas carregados. ${rawOffersData.length} itens encontrados.`);
+
+                    // Filtra as ofertas para incluir somente aquelas com uma URL de imagem válida
+                    offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
+
                     if (offersData.length > 0) {
+                        console.log(`Dados de ofertas filtrados. ${offersData.length} itens com imagem válida.`);
                         // Salva os dados no cache
                         sessionStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offersData));
                         sessionStorage.setItem(`${OFFERS_CACHE_KEY}_time`, Date.now());
-                        console.log("Dados de ofertas salvos no cache.");
+                    } else {
+                        console.warn("Nenhum item com imagem válida encontrado no CSV de ofertas. O carrossel não será exibido.");
+                        offersData = [];
                     }
                 } catch (error) {
                     console.error("Não foi possível carregar as ofertas do banner. O banner permanecerá vazio.");
@@ -417,7 +430,11 @@
                 // Define o intervalo para 10 segundos
                 offerIntervalId = setInterval(updateOffer, 10000);
             } else {
-                console.warn("Nenhuma oferta com imagem válida encontrada para o carrossel.");
+                // Se não houver dados, garante que o intervalo não está rodando e o banner está oculto
+                if (offerIntervalId) {
+                    clearInterval(offerIntervalId);
+                }
+                contentWrapper.style.display = 'none';
             }
         }
 
