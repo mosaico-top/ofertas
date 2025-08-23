@@ -324,12 +324,13 @@
         function showStatus(type, message) {
             statusContainer.classList.add('visible');
             statusContainer.style.display = 'flex';
-            statusText.textContent = message;
             
             if (type === 'loading') {
+                statusText.textContent = message;
                 spinner.style.display = 'block';
                 retryButton.style.display = 'none';
             } else if (type === 'error') {
+                statusText.textContent = ''; // Limpa a mensagem de erro
                 spinner.style.display = 'none';
                 retryButton.style.display = 'block';
             }
@@ -565,7 +566,7 @@
          * Inicializa a aplicação, carregando os dados em ordem.
          */
         async function initApp() {
-            showStatus('loading', 'Carregando conteúdo principal...');
+            showStatus('loading', 'Carregando...');
             
             try {
                 // Carrega o conteúdo principal (iframe) primeiro
@@ -577,11 +578,8 @@
 
             } catch (error) {
                 console.error("Erro fatal ao inicializar a aplicação:", error);
-                let errorMessage = `Erro ao carregar o conteúdo: ${error.message}`;
-                if (error.message.includes("Nenhum dado encontrado para o ID:")) {
-                    errorMessage = "Conteúdo não encontrado.";
-                }
-                showStatus('error', errorMessage);
+                // Exibe apenas o botão de tentar novamente, sem a mensagem detalhada de erro
+                showStatus('error');
             }
         }
 
