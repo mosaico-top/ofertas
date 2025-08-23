@@ -189,7 +189,7 @@
                     <h3 class="content-title"></h3>
                     <p class="content-text"></p>
                     
-                    <a class="cta-button" href="">Veja Mais</a>
+                    <a class="cta-button" href="">Veja Mais...</a>
                 </div>
                 
             </div>
@@ -199,7 +199,7 @@
     <!-- Novo elemento para o estado de carregamento e erro -->
     <div class="loading-container" id="loading-container">
         <div class="spinner"></div>
-        <p class="loading-text">Carregando dados...</p>
+        <p class="loading-text">Carregando...</p>
     </div>
 
     <div class="error-container" id="error-container">
@@ -330,7 +330,7 @@
                     }
                     console.log(`Dados da nova tabela de ofertas carregados. Total de ofertas: ${offersData.length}`);
                     updateOffer(); // Exibe a primeira oferta imediatamente
-                    setInterval(updateOffer, 15000); // Inicia a rotação a cada 15 segundos
+                    setInterval(updateOffer, 14000); // Inicia a rotação a cada 15 segundos
                 })
                 .catch(error => {
                     console.error("Erro ao carregar a tabela de ofertas:", error);
