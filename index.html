@@ -222,7 +222,8 @@
         // --- CONSTANTES E ELEMENTOS DO DOM ---
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
         const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
-        
+        const IFRAME_TIMEOUT = 15000; // 15 segundos
+
         const statusContainer = document.getElementById('status-container');
         const statusText = document.getElementById('status-text');
         const spinner = document.getElementById('spinner');
@@ -401,7 +402,7 @@
         }
 
         /**
-         * Busca os dados da URL principal e atualiza o iframe.
+         * Busca os dados da URL principal e atualiza o iframe, com timeout.
          */
         async function fetchData() {
             showStatus('loading', 'Carregando conteúdo...');
@@ -410,47 +411,58 @@
             const idFromUrl = urlParams.get('id');
 
             if (!idFromUrl) {
-                // Se não houver ID, mostra um erro genérico e para a execução.
-                showStatus('error', 'Erro ao carregar.');
+                showStatus('error', 'Erro ao carregar: ID não encontrado na URL.');
                 return;
             }
 
             try {
+                // Tenta carregar os dados principais do CSV
                 const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
                 
-                // Encontra a linha correspondente ao ID da URL, agora usando 'Item_Id' ou 'id'
+                // Encontra a linha correspondente ao ID da URL
                 const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
 
                 if (!rowData) {
                     throw new Error(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
                 }
 
-                // Tenta encontrar o título em diferentes colunas
                 const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
                 document.querySelector('head title').textContent = titleFromCSV;
                 
-                // Tenta encontrar o link do iframe em diferentes colunas
                 const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
-                if (iframeLinkFromCSV && iframeElement) {
-                    iframeElement.src = iframeLinkFromCSV;
-                    iframeElement.title = titleFromCSV;
-                    
-                    // Adiciona um listener para esconder o status quando o iframe carregar
-                    iframeElement.onload = () => {
-                        hideStatus();
-                    };
-                    iframeElement.onerror = () => {
-                        console.error("Erro ao carregar o conteúdo do iframe.");
-                        showStatus('error', 'Erro ao carregar o conteúdo.');
-                    };
-                } else {
-                    console.error("Link do iframe inválido no CSV.");
-                    showStatus('error', 'Link do iframe inválido.');
+
+                if (!iframeLinkFromCSV) {
+                    throw new Error("Link do iframe inválido no CSV.");
                 }
+
+                // Cria uma promessa para o carregamento do iframe
+                const iframeLoadPromise = new Promise((resolve, reject) => {
+                    iframeElement.onload = () => resolve('success');
+                    iframeElement.onerror = () => reject('error');
+                    iframeElement.src = iframeLinkFromCSV;
+                });
+                
+                // Adiciona um timeout à promessa de carregamento
+                const timeoutPromise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Timeout! O iframe demorou para carregar.'));
+                    }, IFRAME_TIMEOUT);
+                });
+
+                // Executa as duas promessas em paralelo
+                const result = await Promise.race([iframeLoadPromise, timeoutPromise]);
+                
+                if (result === 'success') {
+                    iframeElement.title = titleFromCSV;
+                    hideStatus();
+                } else {
+                    throw new Error(result);
+                }
+
             } catch (error) {
                 console.error("Erro fatal ao carregar a página principal:", error);
-                // Exibe uma mensagem de erro mais genérica no catch.
-                showStatus('error', 'Erro ao carregar.');
+                // Exibe uma mensagem de erro mais específica
+                showStatus('error', `Erro ao carregar o conteúdo: ${error.message}`);
             }
         }
 
@@ -458,6 +470,7 @@
         window.onload = function() {
             fetchData();
             fetchOffersAndStartRotation();
+            // O botão de tentar novamente agora chama a função fetchData
             retryButton.addEventListener('click', fetchData);
         };
     </script>
