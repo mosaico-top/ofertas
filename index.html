@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mosaico Top - Carregando...</title>
-    <!-- Favicon usando SVG inline para garantir que sempre carregue -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>" type="image/svg+xml">
+    <!-- Referência ao favicon.png na raiz do projeto -->
+    <link rel="icon" href="favicon.png" type="image/png">
     
     <style>
         /*
@@ -36,6 +36,7 @@
             display: flex;
             background-color: #ffffff;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: flex 0.3s ease-in-out; /* Transição suave para o redimensionamento */
         }
         
         .iframe-section iframe {
@@ -56,6 +57,7 @@
             text-align: center;
             flex-shrink: 0;
             position: relative; /* Necessário para posicionar o botão de recolher */
+            transition: min-height 0.3s ease-in-out; /* Transição suave para o redimensionamento */
         }
 
         /* Botão para recolher o carrossel */
@@ -94,25 +96,32 @@
             align-items: center;
             gap: 1rem;
             min-height: 120px;
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
         }
 
-        .content-wrapper.collapsed {
+        /* ESTADO RECOLHIDO DO CARROSSEL */
+        .main-container.collapsed .content-section {
             min-height: 50px; /* Altura reduzida quando recolhido */
-            overflow: hidden;
-            /* Oculte a imagem e o botão no estado recolhido */
-            max-height: 50px;
+            padding: 0.5rem 1.5rem;
         }
-
-        .content-wrapper.collapsed .content-image,
-        .content-wrapper.collapsed .cta-button,
-        .content-wrapper.collapsed .text-and-button {
-            display: none;
+        
+        .main-container.collapsed .content-wrapper {
+            flex-direction: row; /* Altera para layout horizontal */
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
         }
-
-        .content-wrapper.collapsed .text-and-button h3 {
-             /* Reduz o tamanho da fonte no modo recolhido */
-             font-size: 1.2em;
+        
+        .main-container.collapsed .content-image,
+        .main-container.collapsed .text-and-button .cta-button {
+            display: none; /* Oculta a imagem e o botão "Veja Mais" */
+        }
+        
+        .main-container.collapsed .text-and-button {
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            flex-grow: 1;
         }
 
         @media (min-width: 768px) {
@@ -122,8 +131,14 @@
                 align-items: center;
                 text-align: left;
             }
-            .content-wrapper.collapsed .text-and-button h3 {
-                font-size: 1.2em;
+            .content-wrapper .text-and-button {
+                align-items: flex-start;
+                margin-left: 1.5rem;
+            }
+            
+            .main-container.collapsed .content-wrapper .text-and-button {
+                align-items: center;
+                margin: 0;
             }
         }
         
@@ -145,13 +160,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        @media (min-width: 768px) {
-            .text-and-button {
-                align-items: flex-start;
-                margin-left: 1.5rem;
-            }
         }
         
         .content-title {
@@ -243,7 +251,7 @@
     </style>
 </head>
 <body>
-    <div class='main-container'>
+    <div class='main-container' id="main-container">
         <div class='iframe-section' id='iframe-area'>
             <iframe src=""
                     width="100%"
@@ -256,9 +264,9 @@
         <div class='content-section' id='content-area'>
             <button class="collapse-button" id="collapse-button" title="Recolher Carrossel">
                 <!-- Ícone SVG de seta para cima -->
-                <svg id="collapse-icon-up" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                <svg id="collapse-icon-up" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
                 <!-- Ícone SVG de seta para baixo -->
-                <svg id="collapse-icon-down" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                <svg id="collapse-icon-down" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
             </button>
             <div class="content-wrapper">
                 <img class="content-image" src="" alt="Imagem da Oferta" onerror="this.src='https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem';"/>
@@ -282,17 +290,18 @@
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
         const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
         const IFRAME_TIMEOUT = 15000; // 15 segundos
-        const OFFERS_DELAY = 1500; // 1.5 segundos
         const OFFERS_CACHE_KEY = 'mosaico_offers_data';
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
 
+        const mainContainer = document.getElementById('main-container');
         const statusContainer = document.getElementById('status-container');
         const statusText = document.getElementById('status-text');
         const spinner = document.getElementById('spinner');
         const retryButton = document.getElementById('retry-button');
 
         const iframeElement = document.querySelector('#iframe-area iframe');
-        const contentWrapper = document.getElementById('content-area').querySelector('.content-wrapper');
+        const contentSection = document.getElementById('content-area');
+        const contentWrapper = contentSection.querySelector('.content-wrapper');
         const contentTitleElement = contentWrapper.querySelector('.content-title');
         const ctaButton = contentWrapper.querySelector('.cta-button');
         const contentImage = contentWrapper.querySelector('.content-image');
@@ -407,10 +416,10 @@
         function updateOffer() {
             if (offersData.length === 0) {
                 console.warn("Nenhuma oferta disponível para exibir no carrossel.");
-                contentWrapper.style.display = 'none';
+                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
                 return;
             } else {
-                contentWrapper.style.display = 'flex';
+                contentSection.style.display = 'flex';
             }
 
             contentWrapper.style.opacity = '0';
@@ -481,7 +490,7 @@
                 if (offerIntervalId) {
                     clearInterval(offerIntervalId);
                 }
-                contentWrapper.style.display = 'none';
+                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
             }
         }
 
@@ -496,10 +505,8 @@
                 throw new Error('Erro ao carregar: ID não encontrado na URL.');
             }
 
-            // Tenta carregar os dados principais do CSV
             const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
             
-            // Encontra a linha correspondente ao ID da URL
             const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
 
             if (!rowData) {
@@ -515,21 +522,18 @@
                 throw new Error("Link do iframe inválido no CSV.");
             }
 
-            // Cria uma promessa para o carregamento do iframe
             const iframeLoadPromise = new Promise((resolve, reject) => {
                 iframeElement.onload = () => resolve('success');
                 iframeElement.onerror = () => reject('error');
                 iframeElement.src = iframeLinkFromCSV;
             });
             
-            // Adiciona um timeout à promessa de carregamento
             const timeoutPromise = new Promise((resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('Timeout! O iframe demorou para carregar.'));
                 }, IFRAME_TIMEOUT);
             });
 
-            // Executa as duas promessas em paralelo
             const result = await Promise.race([iframeLoadPromise, timeoutPromise]);
             
             if (result !== 'success') {
@@ -545,14 +549,14 @@
         function toggleCollapse() {
             isCollapsed = !isCollapsed;
             if (isCollapsed) {
-                contentWrapper.classList.add('collapsed');
-                collapseIconDown.style.display = 'none';
-                collapseIconUp.style.display = 'block';
-                collapseButton.title = "Expandir Carrossel";
-            } else {
-                contentWrapper.classList.remove('collapsed');
+                mainContainer.classList.add('collapsed');
                 collapseIconDown.style.display = 'block';
                 collapseIconUp.style.display = 'none';
+                collapseButton.title = "Expandir Carrossel";
+            } else {
+                mainContainer.classList.remove('collapsed');
+                collapseIconDown.style.display = 'none';
+                collapseIconUp.style.display = 'block';
                 collapseButton.title = "Recolher Carrossel";
             }
         }
@@ -568,12 +572,8 @@
                 await fetchData();
                 hideStatus();
 
-                // Após o iframe carregar, exibe um novo status e carrega o carrossel com um pequeno atraso
-                showStatus('loading', 'Carregando ofertas...');
-                setTimeout(async () => {
-                    await fetchOffersAndStartRotation();
-                    hideStatus();
-                }, OFFERS_DELAY);
+                // Após o iframe carregar, carrega o carrossel imediatamente
+                await fetchOffersAndStartRotation();
 
             } catch (error) {
                 console.error("Erro fatal ao inicializar a aplicação:", error);
