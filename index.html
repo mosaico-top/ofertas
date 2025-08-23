@@ -30,8 +30,8 @@
             flex-grow: 1; /* Ocupa todo o espaço vertical disponível */
         }
 
-        /* --- SEÇÃO DO IFRAME --- */
-        .iframe-section {
+        /* --- SEÇÃO DO CONTEÚDO PRINCIPAL (IFRAME OU NOTÍCIA) --- */
+        .main-content-area {
             flex: 1 1 65vh;
             display: flex;
             background-color: #ffffff;
@@ -39,10 +39,69 @@
             transition: flex 0.3s ease-in-out; /* Transição suave para o redimensionamento */
         }
         
+        .iframe-section {
+            width: 100%;
+            height: 100%;
+        }
+
         .iframe-section iframe {
             width: 100%;
             height: 100%;
             border: none;
+        }
+        
+        /* Estilos para a nova área de conteúdo alternativo */
+        .news-section {
+            display: none; /* Inicia oculto */
+            width: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .news-section .news-image {
+            max-width: 100%;
+            max-height: 250px;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            object-fit: contain;
+        }
+        
+        .news-section .news-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 0;
+            color: #1a1a1a;
+        }
+
+        .news-section .news-description {
+            font-size: 1em;
+            color: #555;
+            margin: 1rem 0;
+            max-width: 600px;
+        }
+
+        /* Botão para abrir o link em nova aba */
+        .news-link-button {
+            display: inline-block;
+            background-color: #007BFF;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1em;
+            border-radius: 50px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .news-link-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
         }
 
         /* --- SEÇÃO DO BANNER DE OFERTA --- */
@@ -227,6 +286,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
+            text-decoration: none;
             transition: background-color 0.3s ease;
         }
 
@@ -252,13 +312,23 @@
 </head>
 <body>
     <div class='main-container' id="main-container">
-        <div class='iframe-section' id='iframe-area'>
-            <iframe src=""
-                    width="100%"
-                    height="100%"
-                    title="Dica Top"
-                    frameborder="0">
-            </iframe>
+        <div class='main-content-area'>
+            <!-- Área do iframe (padrão) -->
+            <div id='iframe-area' class="iframe-section">
+                <iframe src=""
+                        width="100%"
+                        height="100%"
+                        title="Dica Top"
+                        frameborder="0">
+                </iframe>
+            </div>
+            <!-- Área do conteúdo alternativo -->
+            <div id="news-area" class="news-section">
+                <h2 class="news-title"></h2>
+                <img class="news-image" src="" alt="Imagem da Notícia" onerror="this.src='https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem';" />
+                <p class="news-description"></p>
+                <a class="news-link-button" href="#" target="_blank" rel="noopener noreferrer">Ver Notícia Original</a>
+            </div>
         </div>
         
         <div class='content-section' id='content-area'>
@@ -299,7 +369,14 @@
         const spinner = document.getElementById('spinner');
         const retryButton = document.getElementById('retry-button');
 
-        const iframeElement = document.querySelector('#iframe-area iframe');
+        const iframeArea = document.getElementById('iframe-area');
+        const iframeElement = iframeArea.querySelector('iframe');
+        const newsArea = document.getElementById('news-area');
+        const newsTitle = newsArea.querySelector('.news-title');
+        const newsImage = newsArea.querySelector('.news-image');
+        const newsDescription = newsArea.querySelector('.news-description');
+        const newsLinkButton = newsArea.querySelector('.news-link-button');
+
         const contentSection = document.getElementById('content-area');
         const contentWrapper = contentSection.querySelector('.content-wrapper');
         const contentTitleElement = contentWrapper.querySelector('.content-title');
@@ -494,6 +571,33 @@
                 contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
             }
         }
+        
+        /**
+         * Renderiza o conteúdo da notícia na área alternativa.
+         * @param {Object} rowData O objeto de dados da linha do CSV.
+         */
+        function renderNewsContent(rowData) {
+            const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível';
+            // Pega a descrição, dando preferência ao campo 'descricao'
+            const descriptionFromCSV = rowData['descricao'] || rowData['descrição'] || 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, clique no botão abaixo para ver o conteúdo completo no site original.';
+            const imageFromCSV = rowData['img_feed'] || '';
+            const linkFromCSV = rowData['link_chamada'] || rowData['link'];
+
+            // Exibe a área de notícias e oculta a área do iframe
+            iframeArea.style.display = 'none';
+            newsArea.style.display = 'flex';
+
+            newsTitle.textContent = titleFromCSV;
+            newsDescription.textContent = descriptionFromCSV;
+            if (imageFromCSV && imageFromCSV.trim() !== '') {
+                newsImage.src = imageFromCSV;
+            } else {
+                // Usa uma imagem placeholder se a URL não for válida
+                newsImage.src = "https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem";
+            }
+            newsLinkButton.href = linkFromCSV || "#";
+            newsLinkButton.setAttribute('target', '_blank');
+        }
 
         /**
          * Busca os dados da URL principal e atualiza o iframe, com timeout.
@@ -525,7 +629,9 @@
 
             const iframeLoadPromise = new Promise((resolve, reject) => {
                 iframeElement.onload = () => resolve('success');
-                iframeElement.onerror = () => reject('error');
+                // O evento onerror não é confiável para erros de segurança do iframe.
+                // O timeout é a melhor forma de detectar falhas de carregamento.
+                iframeElement.onerror = () => reject(new Error('Falha no carregamento do iframe.'));
                 iframeElement.src = iframeLinkFromCSV;
             });
             
@@ -535,13 +641,18 @@
                 }, IFRAME_TIMEOUT);
             });
 
-            const result = await Promise.race([iframeLoadPromise, timeoutPromise]);
-            
-            if (result !== 'success') {
-                throw new Error(result);
+            try {
+                await Promise.race([iframeLoadPromise, timeoutPromise]);
+                // Se o iframe carregar, ocultamos a área de notícias e exibimos o iframe
+                newsArea.style.display = 'none';
+                iframeArea.style.display = 'flex';
+                iframeElement.title = titleFromCSV;
+            } catch (error) {
+                console.warn(`Tentativa de carregar iframe em "${iframeLinkFromCSV}" falhou. Exibindo conteúdo alternativo.`, error);
+                // Se o iframe falhar, renderizamos o conteúdo alternativo.
+                renderNewsContent(rowData);
+                // A promessa não é rejeitada aqui, pois a UI do usuário foi atualizada de forma amigável.
             }
-
-            iframeElement.title = titleFromCSV;
         }
 
         /**
