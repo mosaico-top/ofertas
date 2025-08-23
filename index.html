@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mosaico Top - Carregando...</title>
-    <!-- Favicon corrigido usando SVG inline para garantir que sempre carregue -->
+    <!-- Favicon usando SVG inline para garantir que sempre carregue -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>" type="image/svg+xml">
     
     <style>
-        /* --- ESTILOS GERAIS E LAYOUT --- */
+        /*
+        * --- ESTILOS GERAIS E LAYOUT ---
+        * Estilos responsivos usando flexbox para uma experiência consistente em diferentes tamanhos de tela.
+        */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f0f2f5; /* Fundo mais suave */
+            background-color: #f0f2f5;
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
@@ -32,7 +35,7 @@
             flex: 1 1 65vh;
             display: flex;
             background-color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Sombra mais destacada */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .iframe-section iframe {
@@ -47,11 +50,11 @@
             justify-content: center;
             align-items: center;
             background-color: #ffffff;
-            padding: 1rem 1.5rem; /* Padding com unidades relativas */
+            padding: 1rem 1.5rem;
             box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
             min-height: 20vh;
             text-align: center;
-            flex-shrink: 0; /* Impede que o banner encolha */
+            flex-shrink: 0;
         }
         
         .content-wrapper {
@@ -62,7 +65,7 @@
             align-items: center;
             gap: 1rem;
             min-height: 120px;
-            transition: opacity 0.5s ease-in-out; /* Transição para suavizar a troca de ofertas */
+            transition: opacity 0.5s ease-in-out;
         }
 
         @media (min-width: 768px) {
@@ -103,7 +106,7 @@
         
         .content-title {
             font-size: 1.4em;
-            font-weight: 600; /* Peso da fonte para destaque */
+            font-weight: 600;
             margin: 0;
             color: #1a1a1a;
         }
@@ -116,7 +119,7 @@
             text-decoration: none;
             font-weight: bold;
             font-size: 1em;
-            border-radius: 50px; /* Borda mais arredondada para um visual moderno */
+            border-radius: 50px;
             transition: background-color 0.3s ease, transform 0.3s ease;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             margin-top: 1rem;
@@ -129,12 +132,12 @@
 
         /* --- ESTADOS DE CARREGAMENTO E ERRO --- */
         .status-container {
-            position: fixed; /* Ocupa a tela inteira */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            display: none; /* Escondido por padrão */
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -142,7 +145,7 @@
             z-index: 1000;
             text-align: center;
             gap: 1.5rem;
-            opacity: 0; /* Usado para transição de opacidade */
+            opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
 
@@ -202,7 +205,7 @@
         
         <div class='content-section' id='content-area'>
             <div class="content-wrapper">
-                <img class="content-image" src="" alt="Imagem da Oferta"/>
+                <img class="content-image" src="" alt="Imagem da Oferta" onerror="this.src='https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem';"/>
                 
                 <div class="text-and-button">
                     <h3 class="content-title"></h3>
@@ -223,6 +226,8 @@
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
         const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
         const IFRAME_TIMEOUT = 15000; // 15 segundos
+        const OFFERS_CACHE_KEY = 'mosaico_offers_data';
+        const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
 
         const statusContainer = document.getElementById('status-container');
         const statusText = document.getElementById('status-text');
@@ -232,8 +237,8 @@
         const iframeElement = document.querySelector('#iframe-area iframe');
         const contentWrapper = document.getElementById('content-area').querySelector('.content-wrapper');
         const contentTitleElement = contentWrapper.querySelector('.content-title');
-        const contentImage = contentWrapper.querySelector('.content-image');
         const ctaButton = contentWrapper.querySelector('.cta-button');
+        const contentImage = contentWrapper.querySelector('.content-image');
 
         // Variáveis de estado
         let offersData = [];
@@ -242,7 +247,7 @@
         // --- FUNÇÕES AUXILIARES ---
 
         /**
-         * Exibe um status de carregamento ou erro.
+         * Exibe um status de carregamento ou erro na tela cheia.
          * @param {string} type 'loading' ou 'error'.
          * @param {string} message A mensagem a ser exibida.
          */
@@ -271,6 +276,7 @@
 
         /**
          * Analisa uma linha de CSV, lidando com campos entre aspas.
+         * Esta função é robusta e lida com valores que contêm vírgulas ou aspas duplas.
          * @param {string} line A linha do CSV.
          * @returns {string[]} Um array de valores.
          */
@@ -314,7 +320,6 @@
                 if (lines.length <= 1) {
                     throw new Error("CSV não contém dados válidos.");
                 }
-                // Ajuste crítico: garante que os cabeçalhos são tratados sem espaços extras.
                 const headers = parseCsvLine(lines[0]).map(header => header.trim());
                 
                 const data = [];
@@ -352,19 +357,18 @@
                 const randomOffer = offersData[randomIndex];
                 
                 if (randomOffer) {
-                    // Usa os novos nomes de colunas com underscore
                     const itemName = randomOffer['Item_Name'];
                     const offerLink = randomOffer['Offer_Link'];
                     const imgUrl = randomOffer['img'];
 
                     contentTitleElement.textContent = itemName || "Oferta Especial";
                     
-                    if (imgUrl) {
+                    if (imgUrl && imgUrl.trim() !== '') {
                         contentImage.src = imgUrl;
                     } else {
+                        // Se a URL da imagem estiver vazia, usa o placeholder
                         contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
                     }
-
                     ctaButton.href = offerLink || "#";
                     // Adiciona o target=_blank e rel para segurança
                     ctaButton.setAttribute('target', '_blank');
@@ -376,28 +380,44 @@
         }
 
         /**
-         * Busca os dados das ofertas e inicia a rotação do banner.
+         * Busca os dados das ofertas, usando cache, e inicia a rotação do banner.
          */
         async function fetchOffersAndStartRotation() {
-            try {
-                const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
-                // Filtra as ofertas para incluir somente aquelas com uma URL de imagem válida
-                offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
+            let cachedData = sessionStorage.getItem(OFFERS_CACHE_KEY);
+            let cachedTime = sessionStorage.getItem(`${OFFERS_CACHE_KEY}_time`);
 
-                if (offersData.length > 0) {
-                    updateOffer(); // Exibe a primeira oferta imediatamente
-                    // Limpa qualquer intervalo anterior para evitar duplicações
-                    if (offerIntervalId) {
-                        clearInterval(offerIntervalId);
+            // Verifica se o cache existe e ainda é válido
+            if (cachedData && cachedTime && (Date.now() - cachedTime < OFFERS_CACHE_EXPIRY)) {
+                console.log("Usando dados de ofertas do cache.");
+                offersData = JSON.parse(cachedData);
+            } else {
+                // Caso contrário, busca do servidor
+                console.log("Buscando novos dados de ofertas...");
+                try {
+                    offersData = await fetchAndParseCsv(OFFERS_CSV_URL);
+                    if (offersData.length > 0) {
+                        // Salva os dados no cache
+                        sessionStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offersData));
+                        sessionStorage.setItem(`${OFFERS_CACHE_KEY}_time`, Date.now());
+                        console.log("Dados de ofertas salvos no cache.");
                     }
-                    // Define o intervalo para 10 segundos
-                    offerIntervalId = setInterval(updateOffer, 10000); // 10 segundos
-                } else {
-                    console.warn("Nenhuma oferta com imagem válida encontrada para o carrossel.");
+                } catch (error) {
+                    console.error("Não foi possível carregar as ofertas do banner. O banner permanecerá vazio.");
+                    offersData = [];
                 }
-            } catch (error) {
-                console.error("Não foi possível carregar as ofertas do banner.");
-                // O banner ficará vazio se houver erro, mas o resto da página pode funcionar.
+            }
+
+            // Se houver dados de ofertas, inicia a rotação
+            if (offersData.length > 0) {
+                updateOffer(); // Exibe a primeira oferta imediatamente
+                // Limpa qualquer intervalo anterior para evitar duplicações
+                if (offerIntervalId) {
+                    clearInterval(offerIntervalId);
+                }
+                // Define o intervalo para 10 segundos
+                offerIntervalId = setInterval(updateOffer, 10000);
+            } else {
+                console.warn("Nenhuma oferta com imagem válida encontrada para o carrossel.");
             }
         }
 
@@ -461,8 +481,6 @@
 
             } catch (error) {
                 console.error("Erro fatal ao carregar a página principal:", error);
-                
-                // Lógica para omitir a mensagem específica de "ID não encontrado"
                 let errorMessage = `Erro ao carregar o conteúdo: ${error.message}`;
                 if (error.message.includes("Nenhum dado encontrado para o ID:")) {
                     errorMessage = "Conteúdo não encontrado.";
