@@ -217,7 +217,6 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
         
         .content-title {
@@ -246,67 +245,8 @@
             transform: translateY(-2px);
         }
 
-        /* --- ESTADOS DE CARREGAMENTO E ERRO --- */
-        .status-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: rgba(255, 255, 255, 0.95);
-            z-index: 1000;
-            text-align: center;
-            gap: 1.5rem;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-
-        .status-container.visible {
-            display: flex;
-            opacity: 1;
-        }
-
-        .loading-text, .error-text {
-            font-size: 1.3em;
-            font-weight: 500;
-            color: #555;
-            margin: 0;
-        }
-
-        .retry-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 14px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
-        }
-
-        .retry-button:hover {
-            background-color: #45a049;
-        }
-
-        /* Animação de carregamento */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .spinner {
-            border: 5px solid rgba(0, 0, 0, 0.1);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border-left-color: #007BFF;
-            animation: spin 1.2s linear infinite;
-        }
+        /* --- ESTADOS DE CARREGAMENTO E ERRO REMOVIDOS --- */
+        .status-container { display: none; }
     </style>
 </head>
 <body>
@@ -348,11 +288,7 @@
         </div>
     </div>
     
-    <div class="status-container" id="status-container">
-        <div class="spinner" id="spinner"></div>
-        <p class="status-text" id="status-text"></p>
-        <button class="retry-button" id="retry-button" style="display:none;">Tentar Novamente</button>
-    </div>
+    <!-- ÁREA DE STATUS REMOVIDA -->
 
     <script>
         // --- CONSTANTES E ELEMENTOS DO DOM ---
@@ -363,11 +299,7 @@
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
 
         const mainContainer = document.getElementById('main-container');
-        const statusContainer = document.getElementById('status-container');
-        const statusText = document.getElementById('status-text');
-        const spinner = document.getElementById('spinner');
-        const retryButton = document.getElementById('retry-button');
-
+        
         const iframeArea = document.getElementById('iframe-area');
         const iframeElement = iframeArea.querySelector('iframe');
         const newsArea = document.getElementById('news-area');
@@ -391,36 +323,6 @@
         let isCollapsed = false;
 
         // --- FUNÇÕES AUXILIARES ---
-
-        /**
-         * Exibe um status de carregamento ou erro na tela cheia.
-         * @param {string} type 'loading' ou 'error'.
-         * @param {string} message A mensagem a ser exibida.
-         */
-        function showStatus(type, message) {
-            statusContainer.classList.add('visible');
-            statusContainer.style.display = 'flex';
-            
-            if (type === 'loading') {
-                statusText.textContent = message;
-                spinner.style.display = 'block';
-                retryButton.style.display = 'none';
-            } else if (type === 'error') {
-                statusText.textContent = ''; // Limpa a mensagem de erro
-                spinner.style.display = 'none';
-                retryButton.style.display = 'block';
-            }
-        }
-
-        /**
-         * Esconde o status de carregamento ou erro.
-         */
-        function hideStatus() {
-            statusContainer.classList.remove('visible');
-            setTimeout(() => {
-                statusContainer.style.display = 'none';
-            }, 500); // Aguarda a transição de opacidade
-        }
 
         /**
          * Analisa uma linha de CSV, lidando com campos entre aspas.
@@ -483,7 +385,8 @@
                 return data;
             } catch (error) {
                 console.error(`Erro ao buscar ou analisar o CSV de ${url}:`, error);
-                throw error;
+                // Não propaga o erro para não travar a aplicação
+                return []; 
             }
         }
 
@@ -533,26 +436,19 @@
             let cachedTime = sessionStorage.getItem(`${OFFERS_CACHE_KEY}_time`);
 
             if (cachedData && cachedTime && (Date.now() - cachedTime < OFFERS_CACHE_EXPIRY)) {
-                console.log("Usando dados de ofertas do cache.");
                 offersData = JSON.parse(cachedData);
             } else {
-                console.log("Buscando novos dados de ofertas...");
                 try {
                     const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
-                    console.log(`Dados brutos de ofertas carregados. ${rawOffersData.length} itens encontrados.`);
-
                     offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
 
                     if (offersData.length > 0) {
-                        console.log(`Dados de ofertas filtrados. ${offersData.length} itens com imagem válida.`);
                         sessionStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offersData));
                         sessionStorage.setItem(`${OFFERS_CACHE_KEY}_time`, Date.now());
                     } else {
-                        console.warn("Nenhum item com imagem válida encontrado no CSV de ofertas. O carrossel não será exibido.");
                         offersData = [];
                     }
                 } catch (error) {
-                    console.error("Não foi possível carregar as ofertas do banner. O banner permanecerá vazio.");
                     offersData = [];
                 }
             }
@@ -576,10 +472,9 @@
          * @param {Object} rowData O objeto de dados da linha do CSV.
          */
         function renderNewsContent(rowData) {
-            // Se rowData for nulo, use um objeto padrão para evitar erros
             rowData = rowData || {
                 'título': 'Conteúdo indisponível',
-                'descricao': 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, verifique o link ou tente novamente.',
+                'descricao': 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, clique no botão abaixo para ver o conteúdo completo no site original.',
                 'img_feed': '',
                 'link_chamada': '#'
             };
@@ -588,7 +483,6 @@
             const imageFromCSV = rowData['img_feed'] || '';
             const linkFromCSV = rowData['link_chamada'] || rowData['link'];
 
-            // Exibe a área de notícias e oculta a área do iframe
             iframeArea.style.display = 'none';
             newsArea.style.display = 'flex';
 
@@ -597,7 +491,6 @@
             if (imageFromCSV && imageFromCSV.trim() !== '') {
                 newsImage.src = imageFromCSV;
             } else {
-                // Usa uma imagem placeholder se a URL não for válida
                 newsImage.src = "https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem";
             }
             newsLinkButton.href = linkFromCSV || "#";
@@ -607,27 +500,24 @@
 
         /**
          * Busca os dados da URL principal e atualiza o iframe, com timeout.
-         * @returns {Promise<void>}
          */
         async function fetchData() {
             const urlParams = new URLSearchParams(window.location.search);
-            // Pega o ID da URL, mas se não existir, define um valor padrão para evitar erro fatal
-            const idFromUrl = urlParams.get('id') || 'default';
+            const idFromUrl = urlParams.get('id');
 
-            const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
-            
-            // Procura os dados com base no ID da URL, se não encontrar, usa o primeiro item da lista
-            let rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
-
-            // Se ainda assim não encontrar, usamos um fallback para não travar a aplicação
-            if (!rowData) {
-                console.warn(`Nenhum dado encontrado para o ID: '${idFromUrl}'. Usando o primeiro item do CSV como fallback.`);
-                rowData = mainData[0];
+            // Se não houver ID na URL, o script não tenta carregar nada
+            if (!idFromUrl) {
+                renderNewsContent(null);
+                return;
             }
             
-            // Se rowData for nulo após o fallback, significa que o CSV principal está vazio.
+            const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
+            
+            const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+
             if (!rowData) {
-                throw new Error("CSV principal vazio. Não há dados para exibir.");
+                renderNewsContent(null);
+                return;
             }
 
             const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
@@ -637,9 +527,8 @@
 
             // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
             if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
-                console.warn("Link do iframe inválido ou vazio no CSV. Exibindo conteúdo alternativo.");
                 renderNewsContent(rowData);
-                return; // Encerra a função aqui
+                return;
             }
 
             const iframeLoadPromise = new Promise((resolve, reject) => {
@@ -661,8 +550,6 @@
                 iframeArea.style.display = 'flex';
                 iframeElement.title = titleFromCSV;
             } catch (error) {
-                console.warn(`Tentativa de carregar iframe em "${iframeLinkFromCSV}" falhou. Exibindo conteúdo alternativo.`, error);
-                // Se o iframe falhar, renderizamos o conteúdo alternativo.
                 renderNewsContent(rowData);
             }
         }
@@ -685,33 +572,10 @@
             }
         }
 
-        /**
-         * Inicializa a aplicação, carregando os dados em ordem.
-         */
-        async function initApp() {
-            showStatus('loading', 'Carregando...');
-            
-            try {
-                // Carrega o conteúdo principal (iframe) primeiro
-                await fetchData();
-                hideStatus();
-
-                // Após o iframe carregar, carrega o carrossel imediatamente
-                setTimeout(() => {
-                    fetchOffersAndStartRotation();
-                }, 2000);
-
-            } catch (error) {
-                console.error("Erro fatal ao inicializar a aplicação:", error);
-                // Exibe apenas o botão de tentar novamente, sem a mensagem detalhada de erro
-                showStatus('error');
-            }
-        }
-
         // --- INÍCIO DA EXECUÇÃO ---
         window.onload = function() {
-            initApp();
-            retryButton.addEventListener('click', initApp);
+            fetchData();
+            fetchOffersAndStartRotation();
             collapseButton.addEventListener('click', toggleCollapse);
         };
     </script>
