@@ -55,8 +55,37 @@
             min-height: 20vh;
             text-align: center;
             flex-shrink: 0;
+            position: relative; /* Necessário para posicionar o botão de recolher */
+        }
+
+        /* Botão para recolher o carrossel */
+        .collapse-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ccc;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 10;
         }
         
+        .collapse-button:hover {
+            transform: scale(1.1);
+        }
+
+        .collapse-button svg {
+            fill: #555;
+            width: 16px;
+            height: 16px;
+        }
+
         .content-wrapper {
             max-width: 700px;
             width: 100%;
@@ -68,12 +97,33 @@
             transition: opacity 0.5s ease-in-out;
         }
 
+        .content-wrapper.collapsed {
+            min-height: 50px; /* Altura reduzida quando recolhido */
+            overflow: hidden;
+            /* Oculte a imagem e o botão no estado recolhido */
+            max-height: 50px;
+        }
+
+        .content-wrapper.collapsed .content-image,
+        .content-wrapper.collapsed .cta-button,
+        .content-wrapper.collapsed .text-and-button {
+            display: none;
+        }
+
+        .content-wrapper.collapsed .text-and-button h3 {
+             /* Reduz o tamanho da fonte no modo recolhido */
+             font-size: 1.2em;
+        }
+
         @media (min-width: 768px) {
             .content-wrapper {
                 flex-direction: row;
                 justify-content: center;
                 align-items: center;
                 text-align: left;
+            }
+            .content-wrapper.collapsed .text-and-button h3 {
+                font-size: 1.2em;
             }
         }
         
@@ -204,6 +254,12 @@
         </div>
         
         <div class='content-section' id='content-area'>
+            <button class="collapse-button" id="collapse-button" title="Recolher Carrossel">
+                <!-- Ícone SVG de seta para cima -->
+                <svg id="collapse-icon-up" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                <!-- Ícone SVG de seta para baixo -->
+                <svg id="collapse-icon-down" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
             <div class="content-wrapper">
                 <img class="content-image" src="" alt="Imagem da Oferta" onerror="this.src='https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem';"/>
                 
@@ -226,6 +282,7 @@
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
         const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
         const IFRAME_TIMEOUT = 15000; // 15 segundos
+        const OFFERS_DELAY = 1500; // 1.5 segundos
         const OFFERS_CACHE_KEY = 'mosaico_offers_data';
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
 
@@ -239,10 +296,14 @@
         const contentTitleElement = contentWrapper.querySelector('.content-title');
         const ctaButton = contentWrapper.querySelector('.cta-button');
         const contentImage = contentWrapper.querySelector('.content-image');
+        const collapseButton = document.getElementById('collapse-button');
+        const collapseIconUp = document.getElementById('collapse-icon-up');
+        const collapseIconDown = document.getElementById('collapse-icon-down');
 
         // Variáveis de estado
         let offersData = [];
         let offerIntervalId = null;
+        let isCollapsed = false;
 
         // --- FUNÇÕES AUXILIARES ---
 
@@ -253,6 +314,7 @@
          */
         function showStatus(type, message) {
             statusContainer.classList.add('visible');
+            statusContainer.style.display = 'flex';
             statusText.textContent = message;
             
             if (type === 'loading') {
@@ -276,7 +338,6 @@
 
         /**
          * Analisa uma linha de CSV, lidando com campos entre aspas.
-         * Esta função é robusta e lida com valores que contêm vírgulas ou aspas duplas.
          * @param {string} line A linha do CSV.
          * @returns {string[]} Um array de valores.
          */
@@ -288,7 +349,6 @@
                 const char = line[i];
                 if (char === '"') {
                     inQuote = !inQuote;
-                    // Lida com aspas duplas escapadas dentro de um campo entre aspas
                     if (!inQuote && line[i + 1] === '"') {
                         currentField += '"';
                         i++;
@@ -480,20 +540,40 @@
         }
 
         /**
-         * Inicializa a aplicação, carregando os dados do iframe e do carrossel em paralelo.
+         * Alterna o estado do carrossel entre recolhido e expandido.
+         */
+        function toggleCollapse() {
+            isCollapsed = !isCollapsed;
+            if (isCollapsed) {
+                contentWrapper.classList.add('collapsed');
+                collapseIconDown.style.display = 'none';
+                collapseIconUp.style.display = 'block';
+                collapseButton.title = "Expandir Carrossel";
+            } else {
+                contentWrapper.classList.remove('collapsed');
+                collapseIconDown.style.display = 'block';
+                collapseIconUp.style.display = 'none';
+                collapseButton.title = "Recolher Carrossel";
+            }
+        }
+
+        /**
+         * Inicializa a aplicação, carregando os dados em ordem.
          */
         async function initApp() {
-            showStatus('loading', 'Carregando conteúdo...');
+            showStatus('loading', 'Carregando conteúdo principal...');
             
             try {
-                // Aguarda o carregamento de AMBOS os recursos antes de continuar
-                await Promise.all([
-                    fetchData(),
-                    fetchOffersAndStartRotation()
-                ]);
-
-                // Se tudo deu certo, esconde a tela de carregamento
+                // Carrega o conteúdo principal (iframe) primeiro
+                await fetchData();
                 hideStatus();
+
+                // Após o iframe carregar, exibe um novo status e carrega o carrossel com um pequeno atraso
+                showStatus('loading', 'Carregando ofertas...');
+                setTimeout(async () => {
+                    await fetchOffersAndStartRotation();
+                    hideStatus();
+                }, OFFERS_DELAY);
 
             } catch (error) {
                 console.error("Erro fatal ao inicializar a aplicação:", error);
@@ -509,6 +589,7 @@
         window.onload = function() {
             initApp();
             retryButton.addEventListener('click', initApp);
+            collapseButton.addEventListener('click', toggleCollapse);
         };
     </script>
 </body>
