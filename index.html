@@ -306,22 +306,30 @@
 
                     // --- Manipular o DOM (HTML) com os dados do CSV ---
                     const pageTitleElement = document.querySelector('head title');
-                    const titleFromCSV = rowData.título || rowData.titulo;
+                    const titleFromCSV = rowData.título || rowData.titulo; // Mantém a compatibilidade com 'título' ou 'titulo'
                     if (pageTitleElement && titleFromCSV) {
                         pageTitleElement.textContent = titleFromCSV;
                     }
 
                     const iframeElement = document.querySelector('#iframe-area .widget-content iframe');
-                    const iframeLinkFromCSV = rowData.link_chamada;
+                    const iframeLinkFromCSV = rowData.link_chamada; // Usa a coluna exata informada
                     if (iframeElement && iframeLinkFromCSV) {
                         iframeElement.src = iframeLinkFromCSV;
                         iframeElement.title = titleFromCSV || rowData.descricao || "Dica Top";
                     }
 
                     const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
-                    const imageFromCSV = rowData.img;
-                    if (contentImage && imageFromCSV) {
-                        contentImage.src = imageFromCSV;
+                    const imageFromCSV = rowData.img; // Usa a coluna exata 'img'
+                    if (contentImage) {
+                        if (imageFromCSV) {
+                            contentImage.src = imageFromCSV;
+                        } else {
+                            // Adiciona uma imagem de placeholder se nenhuma URL for encontrada
+                            contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
+                            console.warn("Nenhuma URL de imagem válida encontrada. Exibindo imagem de espaço reservado.");
+                        }
+                    } else {
+                         console.warn("Elemento de imagem não encontrado no DOM.");
                     }
 
                     const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
@@ -330,13 +338,13 @@
                     }
 
                     const contentText = document.querySelector('#content-area .content-wrapper .content-text');
-                    const descriptionFromCSV = rowData.descricao || rowData.descricao_curta;
+                    const descriptionFromCSV = rowData.descricao; // Usa a coluna exata 'descricao'
                     if (contentText && descriptionFromCSV) {
                         contentText.textContent = descriptionFromCSV;
                     }
 
                     const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
-                    const linkFromCSV = rowData.link || rowData.link_completo;
+                    const linkFromCSV = rowData.link; // Usa a coluna exata 'link'
                     if (ctaButton && linkFromCSV) {
                         ctaButton.href = linkFromCSV;
                     }
