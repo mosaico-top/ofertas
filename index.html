@@ -8,10 +8,9 @@
     <link rel="icon" href="favicon.png" type="image/png">
     
     <style>
-        /*
-        * --- ESTILOS GERAIS E LAYOUT ---
-        * Estilos responsivos usando flexbox para uma experiência consistente em diferentes tamanhos de tela.
-        */
+        /* * --- ESTILOS GERAIS E LAYOUT --- 
+         * Estilos responsivos usando flexbox para uma experiência consistente em diferentes tamanhos de tela. 
+         */ 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
             margin: 0;
@@ -577,8 +576,14 @@
          * @param {Object} rowData O objeto de dados da linha do CSV.
          */
         function renderNewsContent(rowData) {
+            // Se rowData for nulo, use um objeto padrão para evitar erros
+            rowData = rowData || {
+                'título': 'Conteúdo indisponível',
+                'descricao': 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, verifique o link ou tente novamente.',
+                'img_feed': '',
+                'link_chamada': '#'
+            };
             const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível';
-            // Pega a descrição, dando preferência ao campo 'descricao'
             const descriptionFromCSV = rowData['descricao'] || rowData['descrição'] || 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, clique no botão abaixo para ver o conteúdo completo no site original.';
             const imageFromCSV = rowData['img_feed'] || '';
             const linkFromCSV = rowData['link_chamada'] || rowData['link'];
@@ -597,25 +602,32 @@
             }
             newsLinkButton.href = linkFromCSV || "#";
             newsLinkButton.setAttribute('target', '_blank');
+            newsLinkButton.setAttribute('rel', 'noopener noreferrer');
         }
 
         /**
          * Busca os dados da URL principal e atualiza o iframe, com timeout.
+         * @returns {Promise<void>}
          */
         async function fetchData() {
             const urlParams = new URLSearchParams(window.location.search);
-            const idFromUrl = urlParams.get('id');
-
-            if (!idFromUrl) {
-                throw new Error('Erro ao carregar: ID não encontrado na URL.');
-            }
+            // Pega o ID da URL, mas se não existir, define um valor padrão para evitar erro fatal
+            const idFromUrl = urlParams.get('id') || 'default';
 
             const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
             
-            const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+            // Procura os dados com base no ID da URL, se não encontrar, usa o primeiro item da lista
+            let rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
 
+            // Se ainda assim não encontrar, usamos um fallback para não travar a aplicação
             if (!rowData) {
-                throw new Error(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
+                console.warn(`Nenhum dado encontrado para o ID: '${idFromUrl}'. Usando o primeiro item do CSV como fallback.`);
+                rowData = mainData[0];
+            }
+            
+            // Se rowData for nulo após o fallback, significa que o CSV principal está vazio.
+            if (!rowData) {
+                throw new Error("CSV principal vazio. Não há dados para exibir.");
             }
 
             const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
@@ -632,8 +644,6 @@
 
             const iframeLoadPromise = new Promise((resolve, reject) => {
                 iframeElement.onload = () => resolve('success');
-                // O evento onerror não é confiável para erros de segurança do iframe.
-                // O timeout é a melhor forma de detectar falhas de carregamento.
                 iframeElement.onerror = () => reject(new Error('Falha no carregamento do iframe.'));
                 iframeElement.src = iframeLinkFromCSV;
             });
@@ -654,7 +664,6 @@
                 console.warn(`Tentativa de carregar iframe em "${iframeLinkFromCSV}" falhou. Exibindo conteúdo alternativo.`, error);
                 // Se o iframe falhar, renderizamos o conteúdo alternativo.
                 renderNewsContent(rowData);
-                // A promessa não é rejeitada aqui, pois a UI do usuário foi atualizada de forma amigável.
             }
         }
 
