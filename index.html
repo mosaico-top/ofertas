@@ -347,14 +347,12 @@
         function updateOffer() {
             if (offersData.length === 0) {
                 console.warn("Nenhuma oferta disponível para exibir no carrossel.");
-                // Oculta o banner se não houver ofertas
                 contentWrapper.style.display = 'none';
                 return;
             } else {
-                contentWrapper.style.display = 'flex'; // Garante que o banner seja exibido se houver ofertas
+                contentWrapper.style.display = 'flex';
             }
 
-            // Esconde o conteúdo para a transição suave
             contentWrapper.style.opacity = '0';
 
             setTimeout(() => {
@@ -371,17 +369,14 @@
                     if (imgUrl && imgUrl.trim() !== '') {
                         contentImage.src = imgUrl;
                     } else {
-                        // Se a URL da imagem estiver vazia, usa o placeholder
                         contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
                     }
                     ctaButton.href = offerLink || "#";
-                    // Adiciona o target=_blank e rel para segurança
                     ctaButton.setAttribute('target', '_blank');
                     ctaButton.setAttribute('rel', 'noopener noreferrer');
                 }
-                // Exibe o conteúdo após a atualização
                 contentWrapper.style.opacity = '1';
-            }, 500); // O tempo da transição em CSS
+            }, 500);
         }
 
         /**
@@ -391,23 +386,19 @@
             let cachedData = sessionStorage.getItem(OFFERS_CACHE_KEY);
             let cachedTime = sessionStorage.getItem(`${OFFERS_CACHE_KEY}_time`);
 
-            // Verifica se o cache existe e ainda é válido
             if (cachedData && cachedTime && (Date.now() - cachedTime < OFFERS_CACHE_EXPIRY)) {
                 console.log("Usando dados de ofertas do cache.");
                 offersData = JSON.parse(cachedData);
             } else {
-                // Caso contrário, busca do servidor
                 console.log("Buscando novos dados de ofertas...");
                 try {
                     const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
                     console.log(`Dados brutos de ofertas carregados. ${rawOffersData.length} itens encontrados.`);
 
-                    // Filtra as ofertas para incluir somente aquelas com uma URL de imagem válida
                     offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
 
                     if (offersData.length > 0) {
                         console.log(`Dados de ofertas filtrados. ${offersData.length} itens com imagem válida.`);
-                        // Salva os dados no cache
                         sessionStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offersData));
                         sessionStorage.setItem(`${OFFERS_CACHE_KEY}_time`, Date.now());
                     } else {
@@ -420,17 +411,13 @@
                 }
             }
 
-            // Se houver dados de ofertas, inicia a rotação
             if (offersData.length > 0) {
-                updateOffer(); // Exibe a primeira oferta imediatamente
-                // Limpa qualquer intervalo anterior para evitar duplicações
+                updateOffer();
                 if (offerIntervalId) {
                     clearInterval(offerIntervalId);
                 }
-                // Define o intervalo para 10 segundos
                 offerIntervalId = setInterval(updateOffer, 10000);
             } else {
-                // Se não houver dados, garante que o intervalo não está rodando e o banner está oculto
                 if (offerIntervalId) {
                     clearInterval(offerIntervalId);
                 }
@@ -442,62 +429,74 @@
          * Busca os dados da URL principal e atualiza o iframe, com timeout.
          */
         async function fetchData() {
-            showStatus('loading', 'Carregando conteúdo...');
-            
             const urlParams = new URLSearchParams(window.location.search);
             const idFromUrl = urlParams.get('id');
 
             if (!idFromUrl) {
-                showStatus('error', 'Erro ao carregar: ID não encontrado na URL.');
-                return;
+                throw new Error('Erro ao carregar: ID não encontrado na URL.');
             }
 
+            // Tenta carregar os dados principais do CSV
+            const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
+            
+            // Encontra a linha correspondente ao ID da URL
+            const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+
+            if (!rowData) {
+                throw new Error(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
+            }
+
+            const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
+            document.querySelector('head title').textContent = titleFromCSV;
+            
+            const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
+
+            if (!iframeLinkFromCSV) {
+                throw new Error("Link do iframe inválido no CSV.");
+            }
+
+            // Cria uma promessa para o carregamento do iframe
+            const iframeLoadPromise = new Promise((resolve, reject) => {
+                iframeElement.onload = () => resolve('success');
+                iframeElement.onerror = () => reject('error');
+                iframeElement.src = iframeLinkFromCSV;
+            });
+            
+            // Adiciona um timeout à promessa de carregamento
+            const timeoutPromise = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Timeout! O iframe demorou para carregar.'));
+                }, IFRAME_TIMEOUT);
+            });
+
+            // Executa as duas promessas em paralelo
+            const result = await Promise.race([iframeLoadPromise, timeoutPromise]);
+            
+            if (result !== 'success') {
+                throw new Error(result);
+            }
+
+            iframeElement.title = titleFromCSV;
+        }
+
+        /**
+         * Inicializa a aplicação, carregando os dados do iframe e do carrossel em paralelo.
+         */
+        async function initApp() {
+            showStatus('loading', 'Carregando conteúdo...');
+            
             try {
-                // Tenta carregar os dados principais do CSV
-                const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
-                
-                // Encontra a linha correspondente ao ID da URL
-                const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+                // Aguarda o carregamento de AMBOS os recursos antes de continuar
+                await Promise.all([
+                    fetchData(),
+                    fetchOffersAndStartRotation()
+                ]);
 
-                if (!rowData) {
-                    throw new Error(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
-                }
-
-                const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
-                document.querySelector('head title').textContent = titleFromCSV;
-                
-                const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
-
-                if (!iframeLinkFromCSV) {
-                    throw new Error("Link do iframe inválido no CSV.");
-                }
-
-                // Cria uma promessa para o carregamento do iframe
-                const iframeLoadPromise = new Promise((resolve, reject) => {
-                    iframeElement.onload = () => resolve('success');
-                    iframeElement.onerror = () => reject('error');
-                    iframeElement.src = iframeLinkFromCSV;
-                });
-                
-                // Adiciona um timeout à promessa de carregamento
-                const timeoutPromise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        reject(new Error('Timeout! O iframe demorou para carregar.'));
-                    }, IFRAME_TIMEOUT);
-                });
-
-                // Executa as duas promessas em paralelo
-                const result = await Promise.race([iframeLoadPromise, timeoutPromise]);
-                
-                if (result === 'success') {
-                    iframeElement.title = titleFromCSV;
-                    hideStatus();
-                } else {
-                    throw new Error(result);
-                }
+                // Se tudo deu certo, esconde a tela de carregamento
+                hideStatus();
 
             } catch (error) {
-                console.error("Erro fatal ao carregar a página principal:", error);
+                console.error("Erro fatal ao inicializar a aplicação:", error);
                 let errorMessage = `Erro ao carregar o conteúdo: ${error.message}`;
                 if (error.message.includes("Nenhum dado encontrado para o ID:")) {
                     errorMessage = "Conteúdo não encontrado.";
@@ -508,10 +507,8 @@
 
         // --- INÍCIO DA EXECUÇÃO ---
         window.onload = function() {
-            fetchData();
-            fetchOffersAndStartRotation();
-            // O botão de tentar novamente agora chama a função fetchData
-            retryButton.addEventListener('click', fetchData);
+            initApp();
+            retryButton.addEventListener('click', initApp);
         };
     </script>
 </body>
