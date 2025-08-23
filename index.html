@@ -57,6 +57,7 @@
             flex-direction: column; /* Colocando os itens em coluna por padrão */
             align-items: center; /* Centraliza itens na coluna */
             gap: 15px; /* Espaçamento entre os itens */
+            min-height: 120px; /* Garante que o layout não "pule" ao trocar de oferta */
         }
 
         /* Estilos para tela grande: alinhar horizontalmente */
@@ -164,7 +165,7 @@
             border-left-color: #007BFF;
             animation: spin 1.2s linear infinite;
         }
-
+        
     </style>
 </head>
 <body>
@@ -232,7 +233,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
+        // URLs das planilhas
+        const mainCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
+        const offersCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
+        
+        let offersData = [];
         const loadingContainer = document.getElementById('loading-container');
         const errorContainer = document.getElementById('error-container');
         const retryButton = document.getElementById('retry-button');
@@ -246,21 +251,90 @@
 
         if (!idFromUrl) {
             console.log("Nenhum ID encontrado na URL. O conteúdo original será mantido.");
-            // Esconde os containers de carregamento e erro se não houver ID
             loadingContainer.style.display = 'none';
             errorContainer.style.display = 'none';
-            return;
         }
 
-        // Função principal para buscar e exibir os dados
+        // --- Funções de Carregamento e Atualização ---
+        function updateOffer() {
+            // Exibe uma oferta aleatória da lista
+            if (offersData.length === 0) {
+                console.warn("Nenhuma oferta disponível para exibir.");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * offersData.length);
+            const randomOffer = offersData[randomIndex];
+
+            const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
+            const contentText = document.querySelector('#content-area .content-wrapper .content-text');
+            const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
+            const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
+
+            if (contentTitleElement) {
+                // Utiliza 'item name' para o título da oferta
+                contentTitleElement.textContent = randomOffer['item name'] || "Oferta Especial";
+            }
+            if (contentText) {
+                // A nova tabela não tem 'descricao', então deixamos em branco ou podemos usar 'item name'
+                contentText.textContent = randomOffer['item name'] || ""; 
+            }
+            if (contentImage) {
+                // Utiliza 'img' para a imagem da oferta
+                const imgUrl = randomOffer['img'];
+                if (imgUrl) {
+                    contentImage.src = imgUrl;
+                } else {
+                    contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
+                    console.warn("Nenhuma URL de imagem válida encontrada para esta oferta.");
+                }
+            }
+            if (ctaButton) {
+                // Utiliza 'offer link' para o link do botão
+                ctaButton.href = randomOffer['offer link'] || "#";
+            }
+        }
+
+        function fetchOffersAndStartRotation() {
+            fetch(offersCsvUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+                    return response.text();
+                })
+                .then(csvText => {
+                    const lines = csvText.split('\n');
+                    const headers = parseCsvLine(lines[0]).map(header => header.trim());
+                    
+                    offersData = [];
+                    for (const line of lines.slice(1)) {
+                        const values = parseCsvLine(line);
+                        // Garante que a linha tem dados suficientes
+                        if (values.length === headers.length) {
+                            let offerData = {};
+                            headers.forEach((header, index) => {
+                                offerData[header] = values[index];
+                            });
+                            offersData.push(offerData);
+                        }
+                    }
+                    console.log(`Dados da nova tabela de ofertas carregados. Total de ofertas: ${offersData.length}`);
+                    updateOffer(); // Exibe a primeira oferta imediatamente
+                    setInterval(updateOffer, 15000); // Inicia a rotação a cada 15 segundos
+                })
+                .catch(error => {
+                    console.error("Erro ao carregar a tabela de ofertas:", error);
+                    // Pode adicionar um feedback visual para o usuário se a rotação falhar
+                });
+        }
+
+        // Função principal para buscar e exibir os dados do iframe (mantida)
         function fetchData() {
-            // Exibir o container de carregamento e esconder o de erro
             loadingContainer.style.display = 'flex';
             errorContainer.style.display = 'none';
 
             console.log(`Buscando dados para o ID: '${idFromUrl}'...`);
 
-            fetch(csvUrl)
+            fetch(mainCsvUrl)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`Erro HTTP! Status: ${response.status}`);
@@ -268,7 +342,7 @@
                     return response.text();
                 })
                 .then(csvText => {
-                    loadingContainer.style.display = 'none'; // Esconde o carregamento
+                    loadingContainer.style.display = 'none';
                     
                     const lines = csvText.split('\n');
                     const headers = parseCsvLine(lines[0]).map(header => header.trim());
@@ -304,64 +378,34 @@
                         throw new Error("ID not found in CSV");
                     }
 
-                    // --- Manipular o DOM (HTML) com os dados do CSV ---
                     const pageTitleElement = document.querySelector('head title');
-                    const titleFromCSV = rowData.título || rowData.titulo; // Mantém a compatibilidade com 'título' ou 'titulo'
+                    const titleFromCSV = rowData.título || rowData.titulo;
                     if (pageTitleElement && titleFromCSV) {
                         pageTitleElement.textContent = titleFromCSV;
                     }
 
                     const iframeElement = document.querySelector('#iframe-area .widget-content iframe');
-                    const iframeLinkFromCSV = rowData.link_chamada; // Usa a coluna exata informada
+                    const iframeLinkFromCSV = rowData.link_chamada;
                     if (iframeElement && iframeLinkFromCSV) {
                         iframeElement.src = iframeLinkFromCSV;
                         iframeElement.title = titleFromCSV || rowData.descricao || "Dica Top";
                     }
 
-                    const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
-                    const imageFromCSV = rowData.img; // Usa a coluna exata 'img'
-                    if (contentImage) {
-                        if (imageFromCSV) {
-                            contentImage.src = imageFromCSV;
-                        } else {
-                            // Adiciona uma imagem de placeholder se nenhuma URL for encontrada
-                            contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
-                            console.warn("Nenhuma URL de imagem válida encontrada. Exibindo imagem de espaço reservado.");
-                        }
-                    } else {
-                         console.warn("Elemento de imagem não encontrado no DOM.");
-                    }
-
-                    const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
-                    if (contentTitleElement && titleFromCSV) {
-                        contentTitleElement.textContent = titleFromCSV;
-                    }
-
-                    const contentText = document.querySelector('#content-area .content-wrapper .content-text');
-                    const descriptionFromCSV = rowData.descricao; // Usa a coluna exata 'descricao'
-                    if (contentText && descriptionFromCSV) {
-                        contentText.textContent = descriptionFromCSV;
-                    }
-
-                    const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
-                    const linkFromCSV = rowData.link; // Usa a coluna exata 'link'
-                    if (ctaButton && linkFromCSV) {
-                        ctaButton.href = linkFromCSV;
-                    }
-
-                    console.log(`Conteúdo atualizado para o ID: '${idFromUrl}'`);
+                    console.log(`Conteúdo do iframe atualizado para o ID: '${idFromUrl}'`);
                 })
                 .catch(error => {
                     console.error("Erro ao carregar ou processar o CSV:", error);
-                    loadingContainer.style.display = 'none'; // Esconde o carregamento
-                    errorContainer.style.display = 'flex'; // Exibe o erro
+                    loadingContainer.style.display = 'none';
+                    errorContainer.style.display = 'flex';
                 });
         }
 
-        // Chamar a função ao carregar a página
-        fetchData();
-
-        // Adicionar o evento de clique ao botão de tentar novamente
+        // Chamada inicial
+        if (idFromUrl) {
+            fetchData();
+        }
+        fetchOffersAndStartRotation();
+        
         retryButton.addEventListener('click', fetchData);
     });
     </script>
