@@ -623,8 +623,11 @@
             
             const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
 
-            if (!iframeLinkFromCSV) {
-                throw new Error("Link do iframe inválido no CSV.");
+            // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
+            if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
+                console.warn("Link do iframe inválido ou vazio no CSV. Exibindo conteúdo alternativo.");
+                renderNewsContent(rowData);
+                return; // Encerra a função aqui
             }
 
             const iframeLoadPromise = new Promise((resolve, reject) => {
