@@ -3,143 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mosaico Top - Ofertas</title>
-    <link rel="icon" href="favicon.png" type="image/png">
+    <title>Mosaico Top - Carregando...</title>
+    <!-- Use uma imagem de favicon em um servidor CDN ou uma URL de placeholder para evitar falhas -->
+    <link rel="icon" href="https://placehold.co/32x32/E0E0E0/808080?text=F" type="image/png">
+    
     <style>
-        /* CSS Básico e Estilos do Layout */
+        /* --- ESTILOS GERAIS E LAYOUT --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f0f2f5; /* Fundo mais suave */
             color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-container {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-            width: 100%;
+            flex-grow: 1; /* Ocupa todo o espaço vertical disponível */
         }
 
-        /* --- Área Superior: Iframe --- */
+        /* --- SEÇÃO DO IFRAME --- */
         .iframe-section {
-            flex: 1 1 65vh; /* Ocupa 65% da altura da tela, mas pode encolher se necessário */
+            flex: 1 1 65vh;
             display: flex;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Sombra mais destacada */
         }
         
-        .iframe-section .widget-content {
-            width: 100%;
-            height: 100%;
-        }
-
         .iframe-section iframe {
             width: 100%;
             height: 100%;
-            border: none; /* Isso remove a borda padrão do iframe */
+            border: none;
         }
 
-        /* --- Área Inferior: Conteúdo (Banner) --- */
+        /* --- SEÇÃO DO BANNER DE OFERTA --- */
         .content-section {
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #ffffff;
-            padding: 20px 20px; /* Reduzindo o padding para deixá-lo mais compacto */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            min-height: 20vh; /* Reduzindo a altura mínima para parecer um banner */
-            text-align: center; /* Centralizando o conteúdo */
+            padding: 1rem 1.5rem; /* Padding com unidades relativas */
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            min-height: 20vh;
+            text-align: center;
+            flex-shrink: 0; /* Impede que o banner encolha */
         }
         
         .content-wrapper {
-            max-width: 650px;
-            display: flex; /* Usando flexbox para alinhar imagem, texto e botão */
-            flex-direction: column; /* Colocando os itens em coluna por padrão */
-            align-items: center; /* Centraliza itens na coluna */
-            gap: 15px; /* Espaçamento entre os itens */
-            min-height: 120px; /* Garante que o layout não "pule" ao trocar de oferta */
+            max-width: 700px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            min-height: 120px;
+            transition: opacity 0.5s ease-in-out; /* Transição para suavizar a troca de ofertas */
         }
 
-        /* Estilos para tela grande: alinhar horizontalmente */
         @media (min-width: 768px) {
             .content-wrapper {
-                flex-direction: row; /* Alinha em linha em telas maiores */
-                justify-content: center; /* Centraliza horizontalmente */
-                align-items: center; /* Alinha verticalmente */
-                text-align: left; /* Texto alinhado à esquerda para layout horizontal */
-            }
-
-            .content-wrapper .text-and-button {
-                flex-grow: 1; /* Permite que o texto e o botão ocupem o espaço restante */
-                margin-left: 20px; /* Espaçamento da imagem */
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                text-align: left;
             }
         }
-
+        
         .content-image {
-            max-width: 120px; /* Largura da imagem do banner */
+            max-width: 120px;
             height: auto;
             border-radius: 8px;
-            flex-shrink: 0; /* Impede que a imagem encolha */
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .content-image:hover {
+            transform: scale(1.05);
         }
 
-        .content-text {
-            font-size: 1em; /* Tamanho da fonte ligeiramente menor para banner */
-            line-height: 1.4;
-            margin: 0; /* Remove margem padrão */
+        .text-and-button {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* Novo estilo para o título dentro da content-section */
+        @media (min-width: 768px) {
+            .text-and-button {
+                align-items: flex-start;
+                margin-left: 1.5rem;
+            }
+        }
+        
         .content-title {
-            font-size: 1.2em; /* Tamanho do título */
-            font-weight: bold;
-            margin-bottom: 5px; /* Espaço entre o título e a descrição */
-            color: #222; /* Cor mais escura para destaque */
+            font-size: 1.4em;
+            font-weight: 600; /* Peso da fonte para destaque */
+            margin: 0;
+            color: #1a1a1a;
         }
-
 
         .cta-button {
             display: inline-block;
-            background-color: #007BFF; /* Cor do botão - Azul */
+            background-color: #007BFF;
             color: #ffffff;
-            padding: 10px 25px; /* Padding do botão mais compacto */
+            padding: 12px 30px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.9em; /* Tamanho do botão */
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            margin-top: 10px; /* Margem superior para separar do texto */
+            font-size: 1em;
+            border-radius: 50px; /* Borda mais arredondada para um visual moderno */
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 1rem;
         }
 
         .cta-button:hover {
-            background-color: #0056b3; /* Cor do botão ao passar o mouse */
+            background-color: #0056b3;
+            transform: translateY(-2px);
         }
 
-        /* Estilos para o Carregamento e Erro */
-        .loading-container, .error-container {
-            display: none; /* Escondido por padrão */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            width: 100%;
-            text-align: center;
-            position: absolute; /* Para cobrir todo o conteúdo */
+        /* --- ESTADOS DE CARREGAMENTO E ERRO --- */
+        .status-container {
+            position: fixed; /* Ocupa a tela inteira */
             top: 0;
             left: 0;
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: none; /* Escondido por padrão */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 1000;
+            text-align: center;
+            gap: 1.5rem;
+            opacity: 0; /* Usado para transição de opacidade */
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .status-container.visible {
+            display: flex;
+            opacity: 1;
         }
 
         .loading-text, .error-text {
-            font-size: 1.2em;
+            font-size: 1.3em;
+            font-weight: 500;
             color: #555;
-            margin-bottom: 20px;
+            margin: 0;
         }
-        
+
         .retry-button {
-            background-color: #4CAF50; /* Verde */
+            background-color: #4CAF50;
             color: white;
-            padding: 12px 24px;
+            padding: 14px 30px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -158,267 +180,281 @@
         }
 
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border-left-color: #007BFF;
             animation: spin 1.2s linear infinite;
         }
-        
     </style>
 </head>
 <body>
     <div class='main-container'>
         <div class='iframe-section' id='iframe-area'>
-            <div class='widget-content'>
-                <iframe src=""
-                        width="100%"
-                        height="100%"
-                        title="Dica Top"
-                        frameborder="0">
-                </iframe>
-            </div>
+            <iframe src=""
+                    width="100%"
+                    height="100%"
+                    title="Dica Top"
+                    frameborder="0">
+            </iframe>
         </div>
         
         <div class='content-section' id='content-area'>
             <div class="content-wrapper">
-                <img class="content-image" src="" alt=""/>
+                <img class="content-image" src="" alt="Imagem da Oferta"/>
                 
                 <div class="text-and-button">
                     <h3 class="content-title"></h3>
-                    <p class="content-text"></p>
-                    
-                    <a class="cta-button" href="">Veja Mais...</a>
+                    <a class="cta-button" href="" target="_blank" rel="noopener noreferrer">Veja Mais...</a>
                 </div>
-                
             </div>
         </div>
     </div>
     
-    <!-- Novo elemento para o estado de carregamento e erro -->
-    <div class="loading-container" id="loading-container">
-        <div class="spinner"></div>
-        <p class="loading-text">Carregando...</p>
-    </div>
-
-    <div class="error-container" id="error-container">
-        <p class="error-text">Não foi possível carregar os dados.</p>
-        <button class="retry-button" id="retry-button">Tentar Novamente</button>
+    <div class="status-container" id="status-container">
+        <div class="spinner" id="spinner"></div>
+        <p class="status-text" id="status-text"></p>
+        <button class="retry-button" id="retry-button" style="display:none;">Tentar Novamente</button>
     </div>
 
     <script>
-    // --- Funções Auxiliares para Análise de CSV ---
-    function parseCsvLine(line) {
-        const result = [];
-        let inQuote = false;
-        let currentField = '';
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-                inQuote = !inQuote;
-                if (!inQuote && line[i + 1] === '"') { 
-                    currentField += '"';
-                    i++;
-                }
-            } else if (char === ',' && !inQuote) {
-                result.push(currentField.trim());
-                currentField = '';
-            } else {
-                currentField += char;
-            }
-        }
-        result.push(currentField.trim());
-        return result;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // URLs das planilhas
-        const mainCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
-        const offersCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
+        // --- CONSTANTES E ELEMENTOS DO DOM ---
+        const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
+        const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
         
-        let offersData = [];
-        const loadingContainer = document.getElementById('loading-container');
-        const errorContainer = document.getElementById('error-container');
+        const statusContainer = document.getElementById('status-container');
+        const statusText = document.getElementById('status-text');
+        const spinner = document.getElementById('spinner');
         const retryButton = document.getElementById('retry-button');
 
-        function getIdFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
+        const iframeElement = document.querySelector('#iframe-area iframe');
+        const contentWrapper = document.getElementById('content-area').querySelector('.content-wrapper');
+        const contentTitleElement = contentWrapper.querySelector('.content-title');
+        const contentImage = contentWrapper.querySelector('.content-image');
+        const ctaButton = contentWrapper.querySelector('.cta-button');
+
+        // Variáveis de estado
+        let offersData = [];
+        let offerIntervalId = null;
+
+        // --- FUNÇÕES AUXILIARES ---
+
+        /**
+         * Exibe um status de carregamento ou erro.
+         * @param {string} type 'loading' ou 'error'.
+         * @param {string} message A mensagem a ser exibida.
+         */
+        function showStatus(type, message) {
+            statusContainer.classList.add('visible');
+            statusText.textContent = message;
+            
+            if (type === 'loading') {
+                spinner.style.display = 'block';
+                retryButton.style.display = 'none';
+            } else if (type === 'error') {
+                spinner.style.display = 'none';
+                retryButton.style.display = 'block';
+            }
         }
 
-        const idFromUrl = getIdFromUrl();
-
-        if (!idFromUrl) {
-            console.log("Nenhum ID encontrado na URL. O conteúdo original será mantido.");
-            loadingContainer.style.display = 'none';
-            errorContainer.style.display = 'none';
+        /**
+         * Esconde o status de carregamento ou erro.
+         */
+        function hideStatus() {
+            statusContainer.classList.remove('visible');
+            setTimeout(() => {
+                statusContainer.style.display = 'none';
+            }, 500); // Aguarda a transição de opacidade
         }
 
-        // --- Funções de Carregamento e Atualização ---
+        /**
+         * Analisa uma linha de CSV, lidando com campos entre aspas.
+         * @param {string} line A linha do CSV.
+         * @returns {string[]} Um array de valores.
+         */
+        function parseCsvLine(line) {
+            const result = [];
+            let inQuote = false;
+            let currentField = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuote = !inQuote;
+                    // Lida com aspas duplas escapadas dentro de um campo entre aspas
+                    if (!inQuote && line[i + 1] === '"') {
+                        currentField += '"';
+                        i++;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    result.push(currentField.trim());
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            result.push(currentField.trim());
+            return result;
+        }
+
+        /**
+         * Busca e processa um arquivo CSV de uma URL.
+         * @param {string} url A URL do CSV.
+         * @returns {Promise<Object[]>} Uma promessa que resolve para um array de objetos.
+         */
+        async function fetchAndParseCsv(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! Status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                if (lines.length <= 1) {
+                    throw new Error("CSV não contém dados válidos.");
+                }
+                const headers = parseCsvLine(lines[0]).map(header => header.trim());
+                
+                const data = [];
+                for (const line of lines.slice(1)) {
+                    const values = parseCsvLine(line);
+                    if (values.length >= headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index];
+                        });
+                        data.push(row);
+                    }
+                }
+                return data;
+            } catch (error) {
+                console.error(`Erro ao buscar ou analisar o CSV de ${url}:`, error);
+                throw error;
+            }
+        }
+
+        /**
+         * Exibe uma oferta aleatória no banner.
+         */
         function updateOffer() {
-            // Exibe uma oferta aleatória da lista
             if (offersData.length === 0) {
                 console.warn("Nenhuma oferta disponível para exibir.");
                 return;
             }
 
-            const randomIndex = Math.floor(Math.random() * offersData.length);
-            const randomOffer = offersData[randomIndex];
+            // Esconde o conteúdo para a transição suave
+            contentWrapper.style.opacity = '0';
 
-            const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
-            const contentText = document.querySelector('#content-area .content-wrapper .content-text');
-            const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
-            const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
-
-            // Verifica se o objeto e as propriedades existem antes de tentar acessá-las
-            if (randomOffer) {
-                if (contentTitleElement) {
-                    // Usa a chave exata 'item name' para o título da oferta
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * offersData.length);
+                const randomOffer = offersData[randomIndex];
+                
+                if (randomOffer) {
+                    // Preenche os elementos com os dados da oferta
                     contentTitleElement.textContent = randomOffer['item name'] || "Oferta Especial";
-                }
-                if (contentText) {
-                    // Limpa o conteúdo do parágrafo, já que a descrição não é necessária para o carrossel de ofertas
-                    contentText.textContent = ""; 
-                }
-                if (contentImage) {
-                    // Usa a chave exata 'img' para a imagem da oferta
+                    
                     const imgUrl = randomOffer['img'];
                     if (imgUrl) {
                         contentImage.src = imgUrl;
                     } else {
                         contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
-                        console.warn("Nenhuma URL de imagem válida encontrada para esta oferta.");
                     }
-                }
-                if (ctaButton) {
-                    // Usa a chave exata 'offer link' para o link do botão
+
                     ctaButton.href = randomOffer['offer link'] || "#";
+                    // Adiciona o target=_blank e rel para segurança
+                    ctaButton.setAttribute('target', '_blank');
+                    ctaButton.setAttribute('rel', 'noopener noreferrer');
                 }
+                // Exibe o conteúdo após a atualização
+                contentWrapper.style.opacity = '1';
+            }, 500); // O tempo da transição em CSS
+        }
+
+        /**
+         * Busca os dados das ofertas e inicia a rotação do banner.
+         */
+        async function fetchOffersAndStartRotation() {
+            try {
+                const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
+                // Filtra as ofertas para incluir somente aquelas com uma URL de imagem válida
+                offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
+
+                if (offersData.length > 0) {
+                    updateOffer(); // Exibe a primeira oferta imediatamente
+                    // Limpa qualquer intervalo anterior para evitar duplicações
+                    if (offerIntervalId) {
+                        clearInterval(offerIntervalId);
+                    }
+                    // Define o intervalo para 10 segundos
+                    offerIntervalId = setInterval(updateOffer, 10000); // 10 segundos
+                } else {
+                    console.warn("Nenhuma oferta com imagem válida encontrada para o carrossel.");
+                }
+            } catch (error) {
+                console.error("Não foi possível carregar as ofertas do banner.");
+                // O banner ficará vazio se houver erro, mas o resto da página pode funcionar.
             }
         }
 
-        function fetchOffersAndStartRotation() {
-            fetch(offersCsvUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
-                    return response.text();
-                })
-                .then(csvText => {
-                    const lines = csvText.split('\n');
-                    const headers = parseCsvLine(lines[0]).map(header => header.trim());
+        /**
+         * Busca os dados da URL principal e atualiza o iframe.
+         */
+        async function fetchData() {
+            showStatus('loading', 'Carregando conteúdo...');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const idFromUrl = urlParams.get('id');
+
+            if (!idFromUrl) {
+                // Se não houver ID, mostra um erro genérico e para a execução.
+                showStatus('error', 'Erro ao carregar os dados.');
+                return;
+            }
+
+            try {
+                const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
+                
+                // Encontra a linha correspondente ao ID da URL
+                const rowData = mainData.find(row => row.id && row.id.trim() === idFromUrl.trim());
+
+                if (!rowData) {
+                    throw new Error(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
+                }
+
+                // Tenta encontrar o título em diferentes colunas
+                const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
+                document.querySelector('head title').textContent = titleFromCSV;
+                
+                // Tenta encontrar o link do iframe em diferentes colunas
+                const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
+                if (iframeLinkFromCSV && iframeElement) {
+                    iframeElement.src = iframeLinkFromCSV;
+                    iframeElement.title = titleFromCSV;
                     
-                    offersData = [];
-                    // Encontra os índices das colunas para garantir o carregamento correto
-                    const nameIndex = headers.findIndex(h => h.toLowerCase() === 'item name');
-                    const linkIndex = headers.findIndex(h => h.toLowerCase() === 'offer link');
-                    const imgIndex = headers.findIndex(h => h.toLowerCase() === 'img');
-
-                    for (const line of lines.slice(1)) {
-                        const values = parseCsvLine(line);
-                        
-                        // Garante que a linha tem dados suficientes
-                        if (values.length >= headers.length) {
-                            let offerData = {};
-                            // Cria um objeto de dados com base nos índices encontrados
-                            if (nameIndex !== -1) offerData['item name'] = values[nameIndex];
-                            if (linkIndex !== -1) offerData['offer link'] = values[linkIndex];
-                            if (imgIndex !== -1) offerData['img'] = values[imgIndex];
-
-                            offersData.push(offerData);
-                        }
-                    }
-                    console.log(`Dados da nova tabela de ofertas carregados. Total de ofertas: ${offersData.length}`);
-                    updateOffer(); // Exibe a primeira oferta imediatamente
-                    setInterval(updateOffer, 14000); // Inicia a rotação a cada 15 segundos
-                })
-                .catch(error => {
-                    console.error("Erro ao carregar a tabela de ofertas:", error);
-                    // Pode adicionar um feedback visual para o usuário se a rotação falhar
-                });
+                    // Adiciona um listener para esconder o status quando o iframe carregar
+                    iframeElement.onload = () => {
+                        hideStatus();
+                    };
+                    iframeElement.onerror = () => {
+                        console.error("Erro ao carregar o conteúdo do iframe.");
+                        showStatus('error', 'Erro ao carregar o conteúdo.');
+                    };
+                } else {
+                    console.error("Link do iframe inválido no CSV.");
+                    showStatus('error', 'Link do iframe inválido.');
+                }
+            } catch (error) {
+                console.error("Erro fatal ao carregar a página principal:", error);
+                showStatus('error', 'Não foi possível carregar os dados. Verifique a URL e a planilha.');
+            }
         }
 
-        // Função principal para buscar e exibir os dados do iframe (mantida)
-        function fetchData() {
-            loadingContainer.style.display = 'flex';
-            errorContainer.style.display = 'none';
-
-            console.log(`Buscando dados para o ID: '${idFromUrl}'...`);
-
-            fetch(mainCsvUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Erro HTTP! Status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(csvText => {
-                    loadingContainer.style.display = 'none';
-                    
-                    const lines = csvText.split('\n');
-                    const headers = parseCsvLine(lines[0]).map(header => header.trim());
-                    
-                    const idColumnIndex = headers.findIndex(header => header.toLowerCase() === 'id');
-                    if (idColumnIndex === -1) {
-                        console.error("Erro: A coluna 'id' não foi encontrada no seu CSV.");
-                        throw new Error("Missing 'id' column in CSV");
-                    }
-
-                    let rowData = null;
-                    const dataLines = lines.slice(1);
-                    
-                    for (const line of dataLines) {
-                        const values = parseCsvLine(line);
-                        
-                        if (values.length > idColumnIndex) {
-                            const currentId = values[idColumnIndex].trim();
-                            
-                            if (currentId === idFromUrl.trim()) {
-                                rowData = {};
-                                headers.forEach((header, index) => {
-                                    rowData[header] = values[index];
-                                });
-                                console.log("Dados correspondentes encontrados:", rowData);
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!rowData) {
-                        console.log(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
-                        throw new Error("ID not found in CSV");
-                    }
-
-                    const pageTitleElement = document.querySelector('head title');
-                    const titleFromCSV = rowData.título || rowData.titulo;
-                    if (pageTitleElement && titleFromCSV) {
-                        pageTitleElement.textContent = titleFromCSV;
-                    }
-
-                    const iframeElement = document.querySelector('#iframe-area .widget-content iframe');
-                    const iframeLinkFromCSV = rowData.link_chamada;
-                    if (iframeElement && iframeLinkFromCSV) {
-                        iframeElement.src = iframeLinkFromCSV;
-                        iframeElement.title = titleFromCSV || rowData.descricao || "Dica Top";
-                    }
-
-                    console.log(`Conteúdo do iframe atualizado para o ID: '${idFromUrl}'`);
-                })
-                .catch(error => {
-                    console.error("Erro ao carregar ou processar o CSV:", error);
-                    loadingContainer.style.display = 'none';
-                    errorContainer.style.display = 'flex';
-                });
-        }
-
-        // Chamada inicial
-        if (idFromUrl) {
+        // --- INÍCIO DA EXECUÇÃO ---
+        window.onload = function() {
             fetchData();
-        }
-        fetchOffersAndStartRotation();
-        
-        retryButton.addEventListener('click', fetchData);
-    });
+            fetchOffersAndStartRotation();
+            retryButton.addEventListener('click', fetchData);
+        };
     </script>
 </body>
 </html>
