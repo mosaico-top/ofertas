@@ -112,6 +112,59 @@
         .cta-button:hover {
             background-color: #0056b3; /* Cor do botão ao passar o mouse */
         }
+
+        /* Estilos para o Carregamento e Erro */
+        .loading-container, .error-container {
+            display: none; /* Escondido por padrão */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            position: absolute; /* Para cobrir todo o conteúdo */
+            top: 0;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+
+        .loading-text, .error-text {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        
+        .retry-button {
+            background-color: #4CAF50; /* Verde */
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .retry-button:hover {
+            background-color: #45a049;
+        }
+
+        /* Animação de carregamento */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #007BFF;
+            animation: spin 1.2s linear infinite;
+        }
+
     </style>
 </head>
 <body>
@@ -141,10 +194,20 @@
             </div>
         </div>
     </div>
+    
+    <!-- Novo elemento para o estado de carregamento e erro -->
+    <div class="loading-container" id="loading-container">
+        <div class="spinner"></div>
+        <p class="loading-text">Carregando dados...</p>
+    </div>
+
+    <div class="error-container" id="error-container">
+        <p class="error-text">Não foi possível carregar os dados.</p>
+        <button class="retry-button" id="retry-button">Tentar Novamente</button>
+    </div>
 
     <script>
     // --- Funções Auxiliares para Análise de CSV ---
-    // Esta função lida corretamente com campos que contêm vírgulas e estão entre aspas duplas.
     function parseCsvLine(line) {
         const result = [];
         let inQuote = false;
@@ -152,148 +215,146 @@
         for (let i = 0; i < line.length; i++) {
             const char = line[i];
             if (char === '"') {
-                inQuote = !inQuote; // Alterna o estado de "dentro de aspas"
-                // Lida com aspas duplas escapadas (ex: "" dentro de um campo)
+                inQuote = !inQuote;
                 if (!inQuote && line[i + 1] === '"') { 
                     currentField += '"';
-                    i++; // Pula a próxima aspa, pois faz parte do valor
+                    i++;
                 }
             } else if (char === ',' && !inQuote) {
-                result.push(currentField.trim()); // Adiciona o campo e remove espaços em branco extras
-                currentField = ''; // Reinicia para o próximo campo
+                result.push(currentField.trim());
+                currentField = '';
             } else {
-                currentField += char; // Constrói o campo caractere por caractere
+                currentField += char;
             }
         }
-        result.push(currentField.trim()); // Adiciona o último campo
+        result.push(currentField.trim());
         return result;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // URL do seu Google Sheet publicado como CSV
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
+        const loadingContainer = document.getElementById('loading-container');
+        const errorContainer = document.getElementById('error-container');
+        const retryButton = document.getElementById('retry-button');
 
-        // Função para obter o ID da URL
         function getIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id'); // Retorna o valor do parâmetro 'id'
+            return urlParams.get('id');
         }
 
         const idFromUrl = getIdFromUrl();
 
         if (!idFromUrl) {
             console.log("Nenhum ID encontrado na URL. O conteúdo original será mantido.");
-            return; // Sai da função se não houver ID
+            // Esconde os containers de carregamento e erro se não houver ID
+            loadingContainer.style.display = 'none';
+            errorContainer.style.display = 'none';
+            return;
         }
 
-        console.log(`Buscando dados para o ID: '${idFromUrl}'...`);
+        // Função principal para buscar e exibir os dados
+        function fetchData() {
+            // Exibir o container de carregamento e esconder o de erro
+            loadingContainer.style.display = 'flex';
+            errorContainer.style.display = 'none';
 
-        // Carregar e processar o CSV
-        fetch(csvUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP! Status: ${response.status}`);
-                }
-                return response.text(); // Retorna o CSV como texto
-            })
-            .then(csvText => {
-                const lines = csvText.split('\n');
-                
-                // Analisa a primeira linha para obter os cabeçalhos
-                const headers = parseCsvLine(lines[0]).map(header => header.trim());
-                console.log("Cabeçalhos do CSV encontrados:", headers);
+            console.log(`Buscando dados para o ID: '${idFromUrl}'...`);
 
-                // Encontrar o índice da coluna 'id' para evitar problemas de maiúsculas/minúsculas
-                const idColumnIndex = headers.findIndex(header => header.toLowerCase() === 'id');
-                if (idColumnIndex === -1) {
-                    console.error("Erro: A coluna 'id' não foi encontrada no seu CSV. Verifique se o nome da coluna está correto.");
-                    return;
-                }
-
-                let rowData = null;
-                const dataLines = lines.slice(1); // Ignora a linha de cabeçalho
-                
-                // Percorre as linhas do CSV para encontrar o ID correspondente
-                for (const line of dataLines) {
-                    const values = parseCsvLine(line); // Usa a função de parsing
+            fetch(csvUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(csvText => {
+                    loadingContainer.style.display = 'none'; // Esconde o carregamento
                     
-                    if (values.length > idColumnIndex) {
-                        const currentId = values[idColumnIndex].trim(); // Pega o ID da linha e remove espaços
+                    const lines = csvText.split('\n');
+                    const headers = parseCsvLine(lines[0]).map(header => header.trim());
+                    
+                    const idColumnIndex = headers.findIndex(header => header.toLowerCase() === 'id');
+                    if (idColumnIndex === -1) {
+                        console.error("Erro: A coluna 'id' não foi encontrada no seu CSV.");
+                        throw new Error("Missing 'id' column in CSV");
+                    }
+
+                    let rowData = null;
+                    const dataLines = lines.slice(1);
+                    
+                    for (const line of dataLines) {
+                        const values = parseCsvLine(line);
                         
-                        if (currentId === idFromUrl.trim()) {
-                            // Encontrou uma correspondência
-                            rowData = {};
-                            headers.forEach((header, index) => {
-                                rowData[header] = values[index];
-                            });
-                            console.log("Dados correspondentes encontrados:", rowData);
-                            break; // Encontrou o ID, pode parar de buscar
+                        if (values.length > idColumnIndex) {
+                            const currentId = values[idColumnIndex].trim();
+                            
+                            if (currentId === idFromUrl.trim()) {
+                                rowData = {};
+                                headers.forEach((header, index) => {
+                                    rowData[header] = values[index];
+                                });
+                                console.log("Dados correspondentes encontrados:", rowData);
+                                break;
+                            }
                         }
                     }
-                }
 
-                if (!rowData) {
-                    console.log(`Nenhum dado encontrado para o ID: '${idFromUrl}'. Verifique se o ID existe na sua planilha.`);
-                    return; // Sai se não encontrar dados para o ID
-                }
+                    if (!rowData) {
+                        console.log(`Nenhum dado encontrado para o ID: '${idFromUrl}'.`);
+                        throw new Error("ID not found in CSV");
+                    }
 
-                // --- Manipular o DOM (HTML) com os dados do CSV ---
-                // 1. Atualizar o título da página (<title>)
-                const pageTitleElement = document.querySelector('head title');
-                const titleFromCSV = rowData.título || rowData.titulo; // Permite 'título' ou 'titulo'
-                if (pageTitleElement && titleFromCSV) {
-                    pageTitleElement.textContent = titleFromCSV;
-                } else {
-                    console.warn("Coluna 'título' ou 'titulo' não encontrada no CSV. O título da página não foi atualizado.");
-                }
+                    // --- Manipular o DOM (HTML) com os dados do CSV ---
+                    const pageTitleElement = document.querySelector('head title');
+                    const titleFromCSV = rowData.título || rowData.titulo;
+                    if (pageTitleElement && titleFromCSV) {
+                        pageTitleElement.textContent = titleFromCSV;
+                    }
 
-                // 2. Seção do iframe
-                const iframeElement = document.querySelector('#iframe-area .widget-content iframe');
-                const iframeLinkFromCSV = rowData.link_chamada;
-                if (iframeElement && iframeLinkFromCSV) {
-                    iframeElement.src = iframeLinkFromCSV;
-                    iframeElement.title = titleFromCSV || rowData.descricao || "Dica Top";
-                } else {
-                    console.warn("Coluna 'link_chamada' não encontrada. O iframe não foi atualizado.");
-                }
+                    const iframeElement = document.querySelector('#iframe-area .widget-content iframe');
+                    const iframeLinkFromCSV = rowData.link_chamada;
+                    if (iframeElement && iframeLinkFromCSV) {
+                        iframeElement.src = iframeLinkFromCSV;
+                        iframeElement.title = titleFromCSV || rowData.descricao || "Dica Top";
+                    }
 
-                // 3. Seção do conteúdo inferior (imagem, texto, botão)
-                const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
-                const imageFromCSV = rowData.img;
-                if (contentImage && imageFromCSV) {
-                    contentImage.src = imageFromCSV;
-                } else {
-                    console.warn("Coluna 'img' não encontrada. A imagem de conteúdo não foi atualizada.");
-                }
+                    const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
+                    const imageFromCSV = rowData.img;
+                    if (contentImage && imageFromCSV) {
+                        contentImage.src = imageFromCSV;
+                    }
 
-                const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
-                if (contentTitleElement && titleFromCSV) {
-                    contentTitleElement.textContent = titleFromCSV;
-                } else {
-                    console.warn("Coluna 'título' ou 'titulo' não encontrada. O título de conteúdo não foi atualizado.");
-                }
+                    const contentTitleElement = document.querySelector('#content-area .content-wrapper .content-title');
+                    if (contentTitleElement && titleFromCSV) {
+                        contentTitleElement.textContent = titleFromCSV;
+                    }
 
-                const contentText = document.querySelector('#content-area .content-wrapper .content-text');
-                const descriptionFromCSV = rowData.descricao || rowData.descricao_curta; // Permite 'descricao' ou 'descricao_curta'
-                if (contentText && descriptionFromCSV) {
-                    contentText.textContent = descriptionFromCSV;
-                } else {
-                    console.warn("Coluna 'descricao' ou 'descricao_curta' não encontrada. O texto de conteúdo não foi atualizado.");
-                }
+                    const contentText = document.querySelector('#content-area .content-wrapper .content-text');
+                    const descriptionFromCSV = rowData.descricao || rowData.descricao_curta;
+                    if (contentText && descriptionFromCSV) {
+                        contentText.textContent = descriptionFromCSV;
+                    }
 
-                const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
-                const linkFromCSV = rowData.link || rowData.link_completo; // Permite 'link' ou 'link_completo'
-                if (ctaButton && linkFromCSV) {
-                    ctaButton.href = linkFromCSV;
-                } else {
-                    console.warn("Coluna 'link' ou 'link_completo' não encontrada. O botão não foi atualizado.");
-                }
+                    const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
+                    const linkFromCSV = rowData.link || rowData.link_completo;
+                    if (ctaButton && linkFromCSV) {
+                        ctaButton.href = linkFromCSV;
+                    }
 
-                console.log(`Conteúdo atualizado para o ID: '${idFromUrl}'`);
-            })
-            .catch(error => {
-                console.error("Erro ao carregar ou processar o CSV:", error);
-            });
+                    console.log(`Conteúdo atualizado para o ID: '${idFromUrl}'`);
+                })
+                .catch(error => {
+                    console.error("Erro ao carregar ou processar o CSV:", error);
+                    loadingContainer.style.display = 'none'; // Esconde o carregamento
+                    errorContainer.style.display = 'flex'; // Exibe o erro
+                });
+        }
+
+        // Chamar a função ao carregar a página
+        fetchData();
+
+        // Adicionar o evento de clique ao botão de tentar novamente
+        retryButton.addEventListener('click', fetchData);
     });
     </script>
 </body>
