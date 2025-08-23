@@ -271,27 +271,30 @@
             const contentImage = document.querySelector('#content-area .content-wrapper .content-image');
             const ctaButton = document.querySelector('#content-area .content-wrapper .cta-button');
 
-            if (contentTitleElement) {
-                // Utiliza 'item name' para o título da oferta
-                contentTitleElement.textContent = randomOffer['item name'] || "Oferta Especial";
-            }
-            if (contentText) {
-                // A nova tabela não tem 'descricao', então deixamos em branco ou podemos usar 'item name'
-                contentText.textContent = randomOffer['item name'] || ""; 
-            }
-            if (contentImage) {
-                // Utiliza 'img' para a imagem da oferta
-                const imgUrl = randomOffer['img'];
-                if (imgUrl) {
-                    contentImage.src = imgUrl;
-                } else {
-                    contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
-                    console.warn("Nenhuma URL de imagem válida encontrada para esta oferta.");
+            // Verifica se o objeto e as propriedades existem antes de tentar acessá-las
+            if (randomOffer) {
+                if (contentTitleElement) {
+                    // Usa a chave exata 'item name' para o título da oferta
+                    contentTitleElement.textContent = randomOffer['item name'] || "Oferta Especial";
                 }
-            }
-            if (ctaButton) {
-                // Utiliza 'offer link' para o link do botão
-                ctaButton.href = randomOffer['offer link'] || "#";
+                if (contentText) {
+                    // Limpa o conteúdo do parágrafo, já que a descrição não é necessária para o carrossel de ofertas
+                    contentText.textContent = ""; 
+                }
+                if (contentImage) {
+                    // Usa a chave exata 'img' para a imagem da oferta
+                    const imgUrl = randomOffer['img'];
+                    if (imgUrl) {
+                        contentImage.src = imgUrl;
+                    } else {
+                        contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
+                        console.warn("Nenhuma URL de imagem válida encontrada para esta oferta.");
+                    }
+                }
+                if (ctaButton) {
+                    // Usa a chave exata 'offer link' para o link do botão
+                    ctaButton.href = randomOffer['offer link'] || "#";
+                }
             }
         }
 
@@ -306,14 +309,22 @@
                     const headers = parseCsvLine(lines[0]).map(header => header.trim());
                     
                     offersData = [];
+                    // Encontra os índices das colunas para garantir o carregamento correto
+                    const nameIndex = headers.findIndex(h => h.toLowerCase() === 'item name');
+                    const linkIndex = headers.findIndex(h => h.toLowerCase() === 'offer link');
+                    const imgIndex = headers.findIndex(h => h.toLowerCase() === 'img');
+
                     for (const line of lines.slice(1)) {
                         const values = parseCsvLine(line);
+                        
                         // Garante que a linha tem dados suficientes
-                        if (values.length === headers.length) {
+                        if (values.length >= headers.length) {
                             let offerData = {};
-                            headers.forEach((header, index) => {
-                                offerData[header] = values[index];
-                            });
+                            // Cria um objeto de dados com base nos índices encontrados
+                            if (nameIndex !== -1) offerData['item name'] = values[nameIndex];
+                            if (linkIndex !== -1) offerData['offer link'] = values[linkIndex];
+                            if (imgIndex !== -1) offerData['img'] = values[imgIndex];
+
                             offersData.push(offerData);
                         }
                     }
