@@ -250,6 +250,9 @@
     </style>
 </head>
 <body>
+    <!-- Elemento temporário para exibir o ID da URL -->
+    <p id="id-display" style="text-align: center; font-weight: bold; padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; display: none;"></p>
+
     <div class='main-container' id="main-container">
         <div class='main-content-area'>
             <!-- Área do iframe (padrão) -->
@@ -504,6 +507,18 @@
         async function fetchData() {
             const urlParams = new URLSearchParams(window.location.search);
             const idFromUrl = urlParams.get('id');
+
+            // --- INÍCIO: MODIFICAÇÃO PARA DEPURAR ---
+            // Exibe o ID da URL na página para verificação.
+            const idDisplayElement = document.getElementById('id-display');
+            if (idFromUrl) {
+                idDisplayElement.textContent = `ID na URL: ${idFromUrl}`;
+                idDisplayElement.style.display = 'block';
+            } else {
+                idDisplayElement.style.display = 'none';
+            }
+            // --- FIM: MODIFICAÇÃO PARA DEPURAR ---
+
 
             // Se não houver ID na URL, o script não tenta carregar nada
             if (!idFromUrl) {
