@@ -250,9 +250,6 @@
     </style>
 </head>
 <body>
-    <!-- Elemento temporário para exibir o ID da URL -->
-    <p id="id-display" style="text-align: center; font-weight: bold; padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; display: none;"></p>
-
     <div class='main-container' id="main-container">
         <div class='main-content-area'>
             <!-- Área do iframe (padrão) -->
@@ -297,7 +294,7 @@
         // --- CONSTANTES E ELEMENTOS DO DOM ---
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
         const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
-        const IFRAME_TIMEOUT = 15000; // 15 segundos
+        const IFRAME_TIMEOUT = 30000; // Aumentado para 30 segundos
         const OFFERS_CACHE_KEY = 'mosaico_offers_data';
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
 
@@ -475,28 +472,36 @@
          * @param {Object} rowData O objeto de dados da linha do CSV.
          */
         function renderNewsContent(rowData) {
-            rowData = rowData || {
-                'título': 'Conteúdo indisponível',
-                'descricao': 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, clique no botão abaixo para ver o conteúdo completo no site original.',
-                'img_feed': '',
-                'link_chamada': '#'
-            };
-            const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível';
-            const descriptionFromCSV = rowData['descricao'] || rowData['descrição'] || 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela. Por favor, clique no botão abaixo para ver o conteúdo completo no site original.';
-            const imageFromCSV = rowData['img_feed'] || '';
-            const linkFromCSV = rowData['link_chamada'] || rowData['link'];
+            // Se rowData for nulo ou indefinido, usamos um objeto padrão
+            const hasUrl = rowData && (rowData['link_chamada'] || rowData['link']);
+            const linkFromCSV = hasUrl ? (rowData['link_chamada'] || rowData['link']) : null;
+
+            const titleFromCSV = rowData ? (rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível') : 'Conteúdo indisponível';
+            const descriptionFromCSV = rowData ? (rowData['descricao'] || rowData['descrição'] || 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela.') : 'Lamentamos, mas não foi possível carregar o conteúdo na sua tela.';
+            const imageFromCSV = rowData ? (rowData['img_feed'] || '') : '';
 
             iframeArea.style.display = 'none';
             newsArea.style.display = 'flex';
 
             newsTitle.textContent = titleFromCSV;
             newsDescription.textContent = descriptionFromCSV;
+
+            // Se houver uma URL, adiciona a descrição para clicar no botão
+            if (hasUrl) {
+                newsDescription.textContent += ' Por favor, clique no botão abaixo para ver o conteúdo completo no site original.';
+                newsLinkButton.style.display = 'inline-block';
+                newsLinkButton.href = linkFromCSV;
+            } else {
+                // Se não houver URL, oculta o botão
+                newsLinkButton.style.display = 'none';
+                newsLinkButton.href = "#"; // Evita que o link seja clicável
+            }
+
             if (imageFromCSV && imageFromCSV.trim() !== '') {
                 newsImage.src = imageFromCSV;
             } else {
                 newsImage.src = "https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem";
             }
-            newsLinkButton.href = linkFromCSV || "#";
             newsLinkButton.setAttribute('target', '_blank');
             newsLinkButton.setAttribute('rel', 'noopener noreferrer');
         }
@@ -508,19 +513,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const idFromUrl = urlParams.get('id');
 
-            // --- INÍCIO: MODIFICAÇÃO PARA DEPURAR ---
-            // Exibe o ID da URL na página para verificação.
-            const idDisplayElement = document.getElementById('id-display');
-            if (idFromUrl) {
-                idDisplayElement.textContent = `ID na URL: ${idFromUrl}`;
-                idDisplayElement.style.display = 'block';
-            } else {
-                idDisplayElement.style.display = 'none';
-            }
-            // --- FIM: MODIFICAÇÃO PARA DEPURAR ---
-
-
-            // Se não houver ID na URL, o script não tenta carregar nada
+            // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
             if (!idFromUrl) {
                 renderNewsContent(null);
                 return;
