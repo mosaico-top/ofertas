@@ -364,7 +364,7 @@
         const newsTitle = newsArea.querySelector('.news-title');
         const newsImage = newsArea.querySelector('.news-image');
         const newsDescription = newsArea.querySelector('.news-description');
-        const reloadButton = newsArea.querySelector('.reload-button');
+        const reloadButton = document.getElementById('reload-button');
 
         const contentSection = document.getElementById('content-area');
         const contentWrapper = contentSection.querySelector('.content-wrapper');
@@ -639,7 +639,10 @@
             fetchData();
             fetchOffersAndStartRotation();
             collapseButton.addEventListener('click', toggleCollapse);
-            reloadButton.addEventListener('click', fetchData);
+            // Altera o evento para recarregar a página inteira
+            reloadButton.addEventListener('click', () => {
+                window.location.reload();
+            });
         };
     </script>
 </body>
