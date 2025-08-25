@@ -12,7 +12,7 @@
          * Estilos responsivos usando flexbox para uma experiência consistente em diferentes tamanhos de tela. 
          */ 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f0f2f5;
@@ -449,20 +449,20 @@
         }
 
         /**
-         * Exibe uma oferta aleatória no banner.
+         * Exibe uma oferta aleatória no banner ou uma mensagem padrão se não houver ofertas.
+         * Essa é a função principal que foi ajustada.
          */
         function updateOffer() {
             if (offersData.length === 0) {
-                console.warn("Nenhuma oferta disponível para exibir no carrossel.");
-                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
-                return;
+                // CORREÇÃO: O carrossel não é mais ocultado. Em vez disso,
+                // ele exibe uma oferta padrão para garantir que a seção permaneça visível.
+                console.warn("Nenhuma oferta disponível. Exibindo mensagem padrão.");
+                
+                contentTitleElement.textContent = "Nenhuma oferta no momento";
+                contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Oferta";
+                ctaButton.href = "#"; // Opcionalmente, pode ser um link para a página principal
+                ctaButton.textContent = "Voltar ao Início"; // Altera o texto do botão para o padrão
             } else {
-                contentSection.style.display = 'flex';
-            }
-
-            contentWrapper.style.opacity = '0';
-
-            setTimeout(() => {
                 const randomIndex = Math.floor(Math.random() * offersData.length);
                 const randomOffer = offersData[randomIndex];
                 
@@ -479,15 +479,18 @@
                         contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
                     }
                     ctaButton.href = offerLink || "#";
+                    ctaButton.textContent = "Veja Mais...";
                     ctaButton.setAttribute('target', '_blank');
                     ctaButton.setAttribute('rel', 'noopener noreferrer');
                 }
-                contentWrapper.style.opacity = '1';
-            }, 500);
+            }
+            contentWrapper.style.opacity = '1';
         }
 
         /**
          * Busca os dados das ofertas, usando cache, e inicia a rotação do banner.
+         * Essa função foi ajustada para sempre iniciar o carrossel,
+         * mesmo se os dados estiverem vazios.
          */
         async function fetchOffersAndStartRotation() {
             let cachedData = sessionStorage.getItem(OFFERS_CACHE_KEY);
@@ -511,18 +514,13 @@
                 }
             }
 
-            if (offersData.length > 0) {
-                updateOffer();
-                if (offerIntervalId) {
-                    clearInterval(offerIntervalId);
-                }
-                offerIntervalId = setInterval(updateOffer, 8000);
-            } else {
-                if (offerIntervalId) {
-                    clearInterval(offerIntervalId);
-                }
-                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
+            // CORREÇÃO: A rotação é sempre iniciada.
+            // Se offersData estiver vazio, a função updateOffer exibirá a mensagem padrão.
+            updateOffer();
+            if (offerIntervalId) {
+                clearInterval(offerIntervalId);
             }
+            offerIntervalId = setInterval(updateOffer, 8000);
         }
         
         /**
