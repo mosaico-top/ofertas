@@ -639,7 +639,9 @@
             fetchData();
             fetchOffersAndStartRotation();
             collapseButton.addEventListener('click', toggleCollapse);
-            reloadButton.addEventListener('click', fetchData);
+            
+            // Alteração para recarregar a página inteira
+            reloadButton.addEventListener('click', () => location.reload());
         };
     </script>
 </body>
