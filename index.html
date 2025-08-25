@@ -264,11 +264,47 @@
             transform: translateY(-2px);
         }
 
-        /* --- ESTADOS DE CARREGAMENTO E ERRO REMOVIDOS --- */
-        .status-container { display: none; }
+        /* --- ESTILOS PARA O CARREGAMENTO --- */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007BFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <div class='main-container' id="main-container">
         <div class='main-content-area'>
             <!-- Área do iframe (padrão) -->
@@ -321,6 +357,7 @@
 
         const mainContainer = document.getElementById('main-container');
         
+        const loadingOverlay = document.getElementById('loading-overlay');
         const iframeArea = document.getElementById('iframe-area');
         const iframeElement = iframeArea.querySelector('iframe');
         const newsArea = document.getElementById('news-area');
@@ -517,6 +554,7 @@
             // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
             if (!idFromUrl) {
                 renderNewsContent(null);
+                hideLoadingOverlay();
                 return;
             }
             
@@ -526,6 +564,7 @@
 
             if (!rowData) {
                 renderNewsContent(null);
+                hideLoadingOverlay();
                 return;
             }
 
@@ -537,6 +576,7 @@
             // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
             if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
                 renderNewsContent(rowData);
+                hideLoadingOverlay();
                 return;
             }
 
@@ -560,6 +600,8 @@
                 iframeElement.title = titleFromCSV;
             } catch (error) {
                 renderNewsContent(rowData);
+            } finally {
+                hideLoadingOverlay();
             }
         }
 
@@ -579,6 +621,17 @@
                 collapseIconUp.style.display = 'block';
                 collapseButton.title = "Recolher Carrossel";
             }
+        }
+        
+        /**
+         * Oculta a sobreposição de carregamento com uma transição suave.
+         */
+        function hideLoadingOverlay() {
+            loadingOverlay.classList.add('hidden');
+            // Remove a sobreposição do DOM após a transição
+            loadingOverlay.addEventListener('transitionend', () => {
+                loadingOverlay.style.display = 'none';
+            }, { once: true });
         }
 
         // --- INÍCIO DA EXECUÇÃO ---
