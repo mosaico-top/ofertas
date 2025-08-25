@@ -101,8 +101,8 @@
             }
         }
         
-        /* Botão para abrir o link em nova aba e recarregar */
-        .news-link-button, .reload-button {
+        /* Botão para recarregar */
+        .reload-button {
             display: inline-block;
             background-color: #007BFF;
             color: #ffffff;
@@ -113,11 +113,11 @@
             border-radius: 50px;
             transition: background-color 0.3s ease, transform 0.3s ease;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border: none; /* Adicionado para estilizar o botão de recarregar */
+            border: none;
             cursor: pointer;
         }
 
-        .news-link-button:hover, .reload-button:hover {
+        .reload-button:hover {
             background-color: #0056b3;
             transform: translateY(-2px);
         }
@@ -286,8 +286,7 @@
                 <img class="news-image" src="" alt="Imagem da Notícia" onerror="this.src='https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem';" />
                 <p class="news-description"></p>
                 <div class="news-buttons">
-                    <a class="news-link-button" href="#" target="_blank" rel="noopener noreferrer">Ver Notícia Original</a>
-                    <button class="news-link-button reload-button" id="reload-button">Recarregar</button>
+                    <button class="reload-button" id="reload-button">Recarregar</button>
                 </div>
             </div>
         </div>
@@ -328,7 +327,6 @@
         const newsTitle = newsArea.querySelector('.news-title');
         const newsImage = newsArea.querySelector('.news-image');
         const newsDescription = newsArea.querySelector('.news-description');
-        const newsLinkButton = newsArea.querySelector('.news-link-button');
         const reloadButton = newsArea.querySelector('.reload-button');
 
         const contentSection = document.getElementById('content-area');
@@ -495,29 +493,11 @@
          * @param {Object} rowData O objeto de dados da linha do CSV.
          */
         function renderNewsContent(rowData) {
-            // Se rowData for nulo ou indefinido, usamos um objeto padrão
-            const hasUrl = rowData && (rowData['link_chamada'] || rowData['link']);
-            const linkFromCSV = hasUrl ? (rowData['link_chamada'] || rowData['link']) : null;
-
             newsArea.style.display = 'flex';
             iframeArea.style.display = 'none';
 
             newsTitle.textContent = rowData ? (rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível') : 'Conteúdo indisponível';
-            newsDescription.textContent = 'Lamentamos, mas não foi possível carregar o conteúdo.';
-
-            // Adiciona a frase de redirecionamento apenas se houver uma URL
-            if (hasUrl) {
-                newsDescription.textContent += ' Por favor, clique no botão abaixo para ver o conteúdo completo no site original.';
-                newsLinkButton.style.display = 'inline-block';
-                newsLinkButton.href = linkFromCSV;
-            } else {
-                // Se não houver URL, oculta o botão
-                newsLinkButton.style.display = 'none';
-                newsLinkButton.href = "#"; // Evita que o link seja clicável
-            }
-
-            // Oculta o botão de recarregar quando o conteúdo é carregado com sucesso
-            reloadButton.style.display = 'inline-block';
+            newsDescription.textContent = 'Lamentamos, mas não foi possível carregar o conteúdo. Por favor, tente recarregar a página.';
 
             const imageFromCSV = rowData ? (rowData['img_feed'] || '') : '';
             if (imageFromCSV && imageFromCSV.trim() !== '') {
@@ -525,8 +505,6 @@
             } else {
                 newsImage.src = "https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem";
             }
-            newsLinkButton.setAttribute('target', '_blank');
-            newsLinkButton.setAttribute('rel', 'noopener noreferrer');
         }
 
         /**
