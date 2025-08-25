@@ -122,6 +122,12 @@
             transform: translateY(-2px);
         }
 
+        .reload-button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* --- SEÇÃO DO BANNER DE OFERTA --- */
         .content-section {
             display: flex;
@@ -537,56 +543,66 @@
          * funcionalidade de "re-tentativa" de carregamento.
          */
         async function fetchData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const idFromUrl = urlParams.get('id');
-
-            // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
-            if (!idFromUrl) {
-                renderNewsContent(null);
-                return;
-            }
-            
-            // Tenta buscar os dados com a nova lógica de re-conexão
-            const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
-            
-            const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
-
-            if (!rowData) {
-                renderNewsContent(null);
-                return;
-            }
-
-            const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
-            document.querySelector('head title').textContent = titleFromCSV;
-            
-            const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
-
-            // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
-            if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
-                renderNewsContent(rowData);
-                return;
-            }
-
-            const iframeLoadPromise = new Promise((resolve, reject) => {
-                iframeElement.onload = () => resolve('success');
-                iframeElement.onerror = () => reject(new Error('Falha no carregamento do iframe.'));
-                iframeElement.src = iframeLinkFromCSV;
-            });
-            
-            const timeoutPromise = new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    reject(new Error('Timeout! O iframe demorou para carregar.'));
-                }, IFRAME_TIMEOUT);
-            });
+            // Adiciona feedback visual ao botão de recarregar
+            reloadButton.textContent = 'Carregando...';
+            reloadButton.disabled = true;
 
             try {
-                await Promise.race([iframeLoadPromise, timeoutPromise]);
-                // Se o iframe carregar, ocultamos a área de notícias e exibimos o iframe
-                newsArea.style.display = 'none';
-                iframeArea.style.display = 'flex';
-                iframeElement.title = titleFromCSV;
-            } catch (error) {
-                renderNewsContent(rowData);
+                const urlParams = new URLSearchParams(window.location.search);
+                const idFromUrl = urlParams.get('id');
+
+                // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
+                if (!idFromUrl) {
+                    renderNewsContent(null);
+                    return;
+                }
+                
+                // Tenta buscar os dados com a nova lógica de re-conexão
+                const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
+                
+                const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+
+                if (!rowData) {
+                    renderNewsContent(null);
+                    return;
+                }
+
+                const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
+                document.querySelector('head title').textContent = titleFromCSV;
+                
+                const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
+
+                // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
+                if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
+                    renderNewsContent(rowData);
+                    return;
+                }
+
+                const iframeLoadPromise = new Promise((resolve, reject) => {
+                    iframeElement.onload = () => resolve('success');
+                    iframeElement.onerror = () => reject(new Error('Falha no carregamento do iframe.'));
+                    iframeElement.src = iframeLinkFromCSV;
+                });
+                
+                const timeoutPromise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Timeout! O iframe demorou para carregar.'));
+                    }, IFRAME_TIMEOUT);
+                });
+
+                try {
+                    await Promise.race([iframeLoadPromise, timeoutPromise]);
+                    // Se o iframe carregar, ocultamos a área de notícias e exibimos o iframe
+                    newsArea.style.display = 'none';
+                    iframeArea.style.display = 'flex';
+                    iframeElement.title = titleFromCSV;
+                } catch (error) {
+                    renderNewsContent(rowData);
+                }
+            } finally {
+                // Remove o feedback visual, independentemente do sucesso ou falha
+                reloadButton.textContent = 'Recarregar';
+                reloadButton.disabled = false;
             }
         }
 
