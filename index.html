@@ -318,6 +318,7 @@
         const IFRAME_TIMEOUT = 30000; // Aumentado para 30 segundos
         const OFFERS_CACHE_KEY = 'mosaico_offers_data';
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
+        const MAX_RETRIES = 3; // Número máximo de tentativas de busca
 
         const mainContainer = document.getElementById('main-container');
         
@@ -374,11 +375,20 @@
         }
 
         /**
-         * Busca e processa um arquivo CSV de uma URL.
+         * Adiciona um atraso.
+         * @param {number} ms O tempo de espera em milissegundos.
+         */
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        /**
+         * Busca e processa um arquivo CSV de uma URL, com tentativas de re-conexão.
          * @param {string} url A URL do CSV.
+         * @param {number} retries O número de tentativas restantes.
          * @returns {Promise<Object[]>} Uma promessa que resolve para um array de objetos.
          */
-        async function fetchAndParseCsv(url) {
+        async function fetchAndParseCsv(url, retries = MAX_RETRIES) {
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -405,8 +415,13 @@
                 }
                 return data;
             } catch (error) {
-                console.error(`Erro ao buscar ou analisar o CSV de ${url}:`, error);
-                // Não propaga o erro para não travar a aplicação
+                console.error(`Tentativa ${MAX_RETRIES - retries + 1} falhou ao buscar ou analisar o CSV de ${url}:`, error);
+                if (retries > 0) {
+                    // Espera um pouco antes de tentar novamente
+                    await delay(1000 * (MAX_RETRIES - retries + 1)); 
+                    return fetchAndParseCsv(url, retries - 1);
+                }
+                // Se todas as tentativas falharem, retorna um array vazio
                 return []; 
             }
         }
@@ -509,6 +524,17 @@
 
         /**
          * Busca os dados da URL principal e atualiza o iframe, com timeout.
+         * * A função `fetchData` é o coração da sua aplicação. Ela:
+         * 1. Pega o `id` da URL.
+         * 2. Busca os dados do seu CSV principal.
+         * 3. Encontra a linha correspondente ao `id`.
+         * 4. Se encontrar, tenta carregar o `iframe` com o link do CSV.
+         * 5. Usa um `Promise.race` com um timeout para garantir que, se o iframe não carregar em 30 segundos,
+         * a área de notícias alternativa seja exibida.
+         * 6. Se o `iframe` carregar, a área de notícias é ocultada. Se falhar, ela é exibida.
+         * * Esta função é chamada tanto no carregamento inicial da página quanto
+         * sempre que o botão "Recarregar" é clicado, o que garante a
+         * funcionalidade de "re-tentativa" de carregamento.
          */
         async function fetchData() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -520,6 +546,7 @@
                 return;
             }
             
+            // Tenta buscar os dados com a nova lógica de re-conexão
             const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
             
             const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
@@ -583,9 +610,13 @@
 
         // --- INÍCIO DA EXECUÇÃO ---
         window.onload = function() {
+            // Inicia o carregamento do conteúdo principal e das ofertas
             fetchData();
             fetchOffersAndStartRotation();
+            // Adiciona os event listeners
             collapseButton.addEventListener('click', toggleCollapse);
+            // Este event listener é o que faz o botão de recarregar funcionar.
+            // Ele chama a função fetchData, que re-executa toda a lógica de carregamento.
             reloadButton.addEventListener('click', fetchData);
         };
     </script>
