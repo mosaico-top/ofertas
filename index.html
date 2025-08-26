@@ -317,17 +317,14 @@
     
     <!-- ÁREA DE STATUS REMOVIDA -->
 
-    <script>
+   <script>
         // --- CONSTANTES E ELEMENTOS DO DOM ---
-       // const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
-       // const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
-
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=0";
         const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=1150732258";
-        const IFRAME_TIMEOUT = 30000; // Aumentado para 30 segundos
+        const IFRAME_TIMEOUT = 30000; // 30 segundos
         const OFFERS_CACHE_KEY = 'mosaico_offers_data';
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
-        const MAX_RETRIES = 3; // Número máximo de tentativas de busca
+        const MAX_RETRIES = 3;
 
         const mainContainer = document.getElementById('main-container');
         
@@ -348,18 +345,12 @@
         const collapseIconUp = document.getElementById('collapse-icon-up');
         const collapseIconDown = document.getElementById('collapse-icon-down');
 
-        // Variáveis de estado
         let offersData = [];
         let offerIntervalId = null;
         let isCollapsed = false;
 
         // --- FUNÇÕES AUXILIARES ---
 
-        /**
-         * Analisa uma linha de CSV, lidando com campos entre aspas.
-         * @param {string} line A linha do CSV.
-         * @returns {string[]} Um array de valores.
-         */
         function parseCsvLine(line) {
             const result = [];
             let inQuote = false;
@@ -383,27 +374,23 @@
             return result;
         }
 
-        /**
-         * Adiciona um atraso.
-         * @param {number} ms O tempo de espera em milissegundos.
-         */
         function delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        /**
-         * Busca e processa um arquivo CSV de uma URL, com tentativas de re-conexão.
-         * @param {string} url A URL do CSV.
-         * @param {number} retries O número de tentativas restantes.
-         * @returns {Promise<Object[]>} Uma promessa que resolve para um array de objetos.
-         */
         async function fetchAndParseCsv(url, retries = MAX_RETRIES) {
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Erro HTTP! Status: ${response.status}`);
                 }
-                const csvText = await response.text();
+                let csvText = await response.text();
+
+                // CORREÇÃO: Remove o BOM (Byte Order Mark) invisível que o Google Sheets adiciona
+                if (csvText.charCodeAt(0) === 0xFEFF) {
+                    csvText = csvText.substring(1);
+                }
+
                 const lines = csvText.split('\n').filter(line => line.trim() !== '');
                 if (lines.length <= 1) {
                     console.warn(`O CSV da URL "${url}" não contém dados válidos.`);
@@ -417,7 +404,9 @@
                     if (values.length >= headers.length) {
                         const row = {};
                         headers.forEach((header, index) => {
-                            row[header] = values[index];
+                            // Remove o caracter de retorno de carro (\r) que pode ficar no final da linha
+                            const value = (values[index] || '').replace(/\r$/, '');
+                            row[header] = value;
                         });
                         data.push(row);
                     }
@@ -426,22 +415,17 @@
             } catch (error) {
                 console.error(`Tentativa ${MAX_RETRIES - retries + 1} falhou ao buscar ou analisar o CSV de ${url}:`, error);
                 if (retries > 0) {
-                    // Espera um pouco antes de tentar novamente
                     await delay(1000 * (MAX_RETRIES - retries + 1)); 
                     return fetchAndParseCsv(url, retries - 1);
                 }
-                // Se todas as tentativas falharem, retorna um array vazio
                 return []; 
             }
         }
 
-        /**
-         * Exibe uma oferta aleatória no banner.
-         */
         function updateOffer() {
             if (offersData.length === 0) {
                 console.warn("Nenhuma oferta disponível para exibir no carrossel.");
-                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
+                contentSection.style.display = 'none';
                 return;
             } else {
                 contentSection.style.display = 'flex';
@@ -473,9 +457,6 @@
             }, 500);
         }
 
-        /**
-         * Busca os dados das ofertas, usando cache, e inicia a rotação do banner.
-         */
         async function fetchOffersAndStartRotation() {
             let cachedData = sessionStorage.getItem(OFFERS_CACHE_KEY);
             let cachedTime = sessionStorage.getItem(`${OFFERS_CACHE_KEY}_time`);
@@ -508,14 +489,10 @@
                 if (offerIntervalId) {
                     clearInterval(offerIntervalId);
                 }
-                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
+                contentSection.style.display = 'none';
             }
         }
         
-        /**
-         * Renderiza o conteúdo da notícia na área alternativa.
-         * @param {Object} rowData O objeto de dados da linha do CSV.
-         */
         function renderNewsContent(rowData) {
             newsArea.style.display = 'flex';
             iframeArea.style.display = 'none';
@@ -531,22 +508,7 @@
             }
         }
 
-        /**
-         * Busca os dados da URL principal e atualiza o iframe, com timeout.
-         * * A função `fetchData` é o coração da sua aplicação. Ela:
-         * 1. Pega o `id` da URL.
-         * 2. Busca os dados do seu CSV principal.
-         * 3. Encontra a linha correspondente ao `id`.
-         * 4. Se encontrar, tenta carregar o `iframe` com o link do CSV.
-         * 5. Usa um `Promise.race` com um timeout para garantir que, se o iframe não carregar em 30 segundos,
-         * a área de notícias alternativa seja exibida.
-         * 6. Se o `iframe` carregar, a área de notícias é ocultada. Se falhar, ela é exibida.
-         * * Esta função é chamada tanto no carregamento inicial da página quanto
-         * sempre que o botão "Recarregar" é clicado, o que garante a
-         * funcionalidade de "re-tentativa" de carregamento.
-         */
         async function fetchData() {
-            // Adiciona feedback visual ao botão de recarregar
             reloadButton.textContent = 'Carregando...';
             reloadButton.disabled = true;
 
@@ -554,16 +516,14 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const idFromUrl = urlParams.get('id');
 
-                // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
                 if (!idFromUrl) {
                     renderNewsContent(null);
                     return;
                 }
                 
-                // Tenta buscar os dados com a nova lógica de re-conexão
                 const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
                 
-                const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+                const rowData = mainData.find(row => row.id && row.id.trim() === idFromUrl.trim());
 
                 if (!rowData) {
                     renderNewsContent(null);
@@ -575,7 +535,6 @@
                 
                 const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
 
-                // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
                 if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
                     renderNewsContent(rowData);
                     return;
@@ -595,23 +554,22 @@
 
                 try {
                     await Promise.race([iframeLoadPromise, timeoutPromise]);
-                    // Se o iframe carregar, ocultamos a área de notícias e exibimos o iframe
                     newsArea.style.display = 'none';
                     iframeArea.style.display = 'flex';
                     iframeElement.title = titleFromCSV;
                 } catch (error) {
+                    console.error(error.message);
                     renderNewsContent(rowData);
                 }
+            } catch (error) {
+                console.error("Erro geral na função fetchData:", error);
+                renderNewsContent(null);
             } finally {
-                // Remove o feedback visual, independentemente do sucesso ou falha
                 reloadButton.textContent = 'Recarregar';
                 reloadButton.disabled = false;
             }
         }
 
-        /**
-         * Alterna o estado do carrossel entre recolhido e expandido.
-         */
         function toggleCollapse() {
             isCollapsed = !isCollapsed;
             if (isCollapsed) {
@@ -629,13 +587,9 @@
 
         // --- INÍCIO DA EXECUÇÃO ---
         window.onload = function() {
-            // Inicia o carregamento do conteúdo principal e das ofertas
             fetchData();
             fetchOffersAndStartRotation();
-            // Adiciona os event listeners
             collapseButton.addEventListener('click', toggleCollapse);
-            // Este event listener é o que faz o botão de recarregar funcionar.
-            // Ele chama a função fetchData, que re-executa toda a lógica de carregamento.
             reloadButton.addEventListener('click', fetchData);
         };
     </script>
