@@ -1,642 +1,646 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mosaico Top - Carregando...</title>
-    <!-- Referência ao favicon.png na raiz do projeto -->
-    <link rel="icon" href="favicon.png" type="image/png">
-    
-    <style>
-        /* * --- ESTILOS GERAIS E LAYOUT --- 
-         * Estilos responsivos usando flexbox para uma experiência consistente em diferentes tamanhos de tela. 
-         */ 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5;
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosaico Top - Carregando...</title>
+    <!-- Referência ao favicon.png na raiz do projeto -->
+    <link rel="icon" href="favicon.png" type="image/png">
+    
+    <style>
+        /* * --- ESTILOS GERAIS E LAYOUT --- 
+         * Estilos responsivos usando flexbox para uma experiência consistente em diferentes tamanhos de tela. 
+         */ 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1; /* Ocupa todo o espaço vertical disponível */
-        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Ocupa todo o espaço vertical disponível */
+        }
 
-        /* --- SEÇÃO DO CONTEÚDO PRINCIPAL (IFRAME OU NOTÍCIA) --- */
-        .main-content-area {
-            flex: 1 1 65vh;
-            display: flex;
-            background-color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: flex 0.3s ease-in-out; /* Transição suave para o redimensionamento */
-        }
-        
-        .iframe-section {
-            width: 100%;
-            height: 100%;
-        }
+        /* --- SEÇÃO DO CONTEÚDO PRINCIPAL (IFRAME OU NOTÍCIA) --- */
+        .main-content-area {
+            flex: 1 1 65vh;
+            display: flex;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: flex 0.3s ease-in-out; /* Transição suave para o redimensionamento */
+        }
+        
+        .iframe-section {
+            width: 100%;
+            height: 100%;
+        }
 
-        .iframe-section iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        /* Estilos para a nova área de conteúdo alternativo */
-        .news-section {
-            display: none; /* Inicia oculto */
-            width: 100%;
-            padding: 2rem;
-            box-sizing: border-box;
-            text-align: center;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+        .iframe-section iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Estilos para a nova área de conteúdo alternativo */
+        .news-section {
+            display: none; /* Inicia oculto */
+            width: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
 
-        .news-section .news-image {
-            max-width: 100%;
-            max-height: 250px;
-            height: auto;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            object-fit: contain;
-        }
-        
-        .news-section .news-title {
-            font-size: 1.8em;
-            font-weight: 700;
-            margin: 0;
-            color: #1a1a1a;
-        }
+        .news-section .news-image {
+            max-width: 100%;
+            max-height: 250px;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            object-fit: contain;
+        }
+        
+        .news-section .news-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 0;
+            color: #1a1a1a;
+        }
 
-        .news-section .news-description {
-            font-size: 1em;
-            color: #555;
-            margin: 1rem 0;
-            max-width: 600px;
-        }
-        
-        /* Contêiner para os botões */
-        .news-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 1rem;
-            align-items: center;
-            width: 100%;
-        }
+        .news-section .news-description {
+            font-size: 1em;
+            color: #555;
+            margin: 1rem 0;
+            max-width: 600px;
+        }
+        
+        /* Contêiner para os botões */
+        .news-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: center;
+            width: 100%;
+        }
 
-        @media (min-width: 600px) {
-            .news-buttons {
-                flex-direction: row;
-                justify-content: center;
-            }
-        }
-        
-        /* Botão para recarregar */
-        .reload-button {
-            display: inline-block;
-            background-color: #007BFF;
-            color: #ffffff;
-            padding: 12px 30px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1em;
-            border-radius: 50px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border: none;
-            cursor: pointer;
-        }
+        @media (min-width: 600px) {
+            .news-buttons {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+        
+        /* Botão para recarregar */
+        .reload-button {
+            display: inline-block;
+            background-color: #007BFF;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1em;
+            border-radius: 50px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+        }
 
-        .reload-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
+        .reload-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
 
-        .reload-button:disabled {
-            background-color: #888;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .reload-button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-        /* --- SEÇÃO DO BANNER DE OFERTA --- */
-        .content-section {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #ffffff;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-            min-height: 20vh;
-            text-align: center;
-            flex-shrink: 0;
-            position: relative; /* Necessário para posicionar o botão de recolher */
-            transition: min-height 0.3s ease-in-out; /* Transição suave para o redimensionamento */
-        }
+        /* --- SEÇÃO DO BANNER DE OFERTA --- */
+        .content-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            min-height: 20vh;
+            text-align: center;
+            flex-shrink: 0;
+            position: relative; /* Necessário para posicionar o botão de recolher */
+            transition: min-height 0.3s ease-in-out; /* Transição suave para o redimensionamento */
+        }
 
-        /* Botão para recolher o carrossel */
-        .collapse-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #ccc;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            z-index: 10;
-        }
-        
-        .collapse-button:hover {
-            transform: scale(1.1);
-        }
+        /* Botão para recolher o carrossel */
+        .collapse-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ccc;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+        
+        .collapse-button:hover {
+            transform: scale(1.1);
+        }
 
-        .collapse-button svg {
-            fill: #555;
-            width: 16px;
-            height: 16px;
-        }
+        .collapse-button svg {
+            fill: #555;
+            width: 16px;
+            height: 16px;
+        }
 
-        .content-wrapper {
-            max-width: 700px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            min-height: 120px;
-            transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
-        }
+        .content-wrapper {
+            max-width: 700px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            min-height: 120px;
+            transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
+        }
 
-        /* ESTADO RECOLHIDO DO CARROSSEL */
-        .main-container.collapsed .content-section {
-            min-height: 50px; /* Altura reduzida quando recolhido */
-            padding: 0.5rem 1.5rem;
-        }
-        
-        .main-container.collapsed .content-wrapper {
-            flex-direction: row; /* Altera para layout horizontal */
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .main-container.collapsed .content-image,
-        .main-container.collapsed .text-and-button .cta-button {
-            display: none; /* Oculta a imagem e o botão "Veja Mais" */
-        }
-        
-        .main-container.collapsed .text-and-button {
-            flex-direction: row;
-            align-items: center;
-            gap: 1rem;
-            flex-grow: 1;
-        }
+        /* ESTADO RECOLHIDO DO CARROSSEL */
+        .main-container.collapsed .content-section {
+            min-height: 50px; /* Altura reduzida quando recolhido */
+            padding: 0.5rem 1.5rem;
+        }
+        
+        .main-container.collapsed .content-wrapper {
+            flex-direction: row; /* Altera para layout horizontal */
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-grow: 1;
+        }
+        
+        .main-container.collapsed .content-image,
+        .main-container.collapsed .text-and-button .cta-button {
+            display: none; /* Oculta a imagem e o botão "Veja Mais" */
+        }
+        
+        .main-container.collapsed .text-and-button {
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            flex-grow: 1;
+        }
 
-        @media (min-width: 768px) {
-            .content-wrapper {
-                flex-direction: row;
-                justify-content: center;
-                align-items: center;
-                text-align: left;
-            }
-            .content-wrapper .text-and-button {
-                align-items: flex-start;
-                margin-left: 1.5rem;
-            }
-            
-            .main-container.collapsed .content-wrapper .text-and-button {
-                align-items: center;
-                margin: 0;
-            }
-        }
-        
-        .content-image {
-            max-width: 120px;
-            height: auto;
-            border-radius: 8px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .content-image:hover {
-            transform: scale(1.05);
-        }
+        @media (min-width: 768px) {
+            .content-wrapper {
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                text-align: left;
+            }
+            .content-wrapper .text-and-button {
+                align-items: flex-start;
+                margin-left: 1.5rem;
+            }
+            
+            .main-container.collapsed .content-wrapper .text-and-button {
+                align-items: center;
+                margin: 0;
+            }
+        }
+        
+        .content-image {
+            max-width: 120px;
+            height: auto;
+            border-radius: 8px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .content-image:hover {
+            transform: scale(1.05);
+        }
 
-        .text-and-button {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .content-title {
-            font-size: 1.4em;
-            font-weight: 600;
-            margin: 0;
-            color: #1a1a1a;
-        }
+        .text-and-button {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0;
+            color: #1a1a1a;
+        }
 
-        .cta-button {
-            display: inline-block;
-            background-color: #007BFF;
-            color: #ffffff;
-            padding: 12px 30px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1em;
-            border-radius: 50px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-top: 1rem;
-        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007BFF;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1em;
+            border-radius: 50px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
 
-        .cta-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
+        .cta-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
 
-        /* --- ESTADOS DE CARREGAMENTO E ERRO REMOVIDOS --- */
-        .status-container { display: none; }
-    </style>
+        /* --- ESTADOS DE CARREGAMENTO E ERRO REMOVIDOS --- */
+        .status-container { display: none; }
+    </style>
 </head>
 <body>
-    <div class='main-container' id="main-container">
-        <div class='main-content-area'>
-            <!-- Área do iframe (padrão) -->
-            <div id='iframe-area' class="iframe-section">
-                <iframe src=""
-                        width="100%"
-                        height="100%"
-                        title="Dica Top"
-                        frameborder="0">
-                </iframe>
-            </div>
-            <!-- Área do conteúdo alternativo -->
-            <div id="news-area" class="news-section">
-                <h2 class="news-title"></h2>
-                <img class="news-image" src="" alt="Imagem da Notícia" onerror="this.src='https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem';" />
-                <p class="news-description"></p>
-                <div class="news-buttons">
-                    <button class="reload-button" id="reload-button">Recarregar</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class='content-section' id='content-area'>
-            <button class="collapse-button" id="collapse-button" title="Recolher Carrossel">
-                <!-- Ícone SVG de seta para cima -->
-                <svg id="collapse-icon-up" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-                <!-- Ícone SVG de seta para baixo -->
-                <svg id="collapse-icon-down" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
-            </button>
-            <div class="content-wrapper">
-                <img class="content-image" src="" alt="Imagem da Oferta" onerror="this.src='https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem';"/>
-                
-                <div class="text-and-button">
-                    <h3 class="content-title"></h3>
-                    <a class="cta-button" href="" target="_blank" rel="noopener noreferrer">Veja Mais...</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- ÁREA DE STATUS REMOVIDA -->
+    <div class='main-container' id="main-container">
+        <div class='main-content-area'>
+            <!-- Área do iframe (padrão) -->
+            <div id='iframe-area' class="iframe-section">
+                <iframe src=""
+                        width="100%"
+                        height="100%"
+                        title="Dica Top"
+                        frameborder="0">
+                </iframe>
+            </div>
+            <!-- Área do conteúdo alternativo -->
+            <div id="news-area" class="news-section">
+                <h2 class="news-title"></h2>
+                <img class="news-image" src="" alt="Imagem da Notícia" onerror="this.src='https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem';" />
+                <p class="news-description"></p>
+                <div class="news-buttons">
+                    <button class="reload-button" id="reload-button">Recarregar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class='content-section' id='content-area'>
+            <button class="collapse-button" id="collapse-button" title="Recolher Carrossel">
+                <!-- Ícone SVG de seta para cima -->
+                <svg id="collapse-icon-up" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                <!-- Ícone SVG de seta para baixo -->
+                <svg id="collapse-icon-down" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+            </button>
+            <div class="content-wrapper">
+                <img class="content-image" src="" alt="Imagem da Oferta" onerror="this.src='https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem';"/>
+                
+                <div class="text-and-button">
+                    <h3 class="content-title"></h3>
+                    <a class="cta-button" href="" target="_blank" rel="noopener noreferrer">Veja Mais...</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ÁREA DE STATUS REMOVIDA -->
 
-    <script>
-        // --- CONSTANTES E ELEMENTOS DO DOM ---
-        // A lógica de URLs foi movida para este script.
-        const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=0";
-        const OFFERS_CSV_URL = "https://docs.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=1150732258";
-        const IFRAME_TIMEOUT = 30000; // Aumentado para 30 segundos
-        const OFFERS_CACHE_KEY = 'mosaico_offers_data';
-        const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
-        const MAX_RETRIES = 3; // Número máximo de tentativas de busca
+    <script>
+        // --- CONSTANTES E ELEMENTOS DO DOM ---
+        // URL principal do CSV para o conteúdo do iframe.
+        // Atualizado para usar o arquivo "Desconto top - postagem.csv" fornecido.
+        const MAIN_CSV_URL = "Desconto top - postagem.csv";
+        // URL do CSV para o carrossel de ofertas.
+        // Atualizado para usar o arquivo "Desconto top - shop.csv" fornecido.
+        const OFFERS_CSV_URL = "Desconto top - shop.csv";
+        const IFRAME_TIMEOUT = 30000; // Aumentado para 30 segundos
+        const OFFERS_CACHE_KEY = 'mosaico_offers_data';
+        const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
+        const MAX_RETRIES = 3; // Número máximo de tentativas de busca
 
-        const mainContainer = document.getElementById('main-container');
-        
-        const iframeArea = document.getElementById('iframe-area');
-        const iframeElement = iframeArea.querySelector('iframe');
-        const newsArea = document.getElementById('news-area');
-        const newsTitle = newsArea.querySelector('.news-title');
-        const newsImage = newsArea.querySelector('.news-image');
-        const newsDescription = newsArea.querySelector('.news-description');
-        const reloadButton = newsArea.querySelector('.reload-button');
+        const mainContainer = document.getElementById('main-container');
+        
+        const iframeArea = document.getElementById('iframe-area');
+        const iframeElement = iframeArea.querySelector('iframe');
+        const newsArea = document.getElementById('news-area');
+        const newsTitle = newsArea.querySelector('.news-title');
+        const newsImage = newsArea.querySelector('.news-image');
+        const newsDescription = newsArea.querySelector('.news-description');
+        const reloadButton = newsArea.querySelector('.reload-button');
 
-        const contentSection = document.getElementById('content-area');
-        const contentWrapper = contentSection.querySelector('.content-wrapper');
-        const contentTitleElement = contentWrapper.querySelector('.content-title');
-        const ctaButton = contentWrapper.querySelector('.cta-button');
-        const contentImage = contentWrapper.querySelector('.content-image');
-        const collapseButton = document.getElementById('collapse-button');
-        const collapseIconUp = document.getElementById('collapse-icon-up');
-        const collapseIconDown = document.getElementById('collapse-icon-down');
+        const contentSection = document.getElementById('content-area');
+        const contentWrapper = contentSection.querySelector('.content-wrapper');
+        const contentTitleElement = contentWrapper.querySelector('.content-title');
+        const ctaButton = contentWrapper.querySelector('.cta-button');
+        const contentImage = contentWrapper.querySelector('.content-image');
+        const collapseButton = document.getElementById('collapse-button');
+        const collapseIconUp = document.getElementById('collapse-icon-up');
+        const collapseIconDown = document.getElementById('collapse-icon-down');
 
-        // Variáveis de estado
-        let offersData = [];
-        let offerIntervalId = null;
-        let isCollapsed = false;
+        // Variáveis de estado
+        let offersData = [];
+        let offerIntervalId = null;
+        let isCollapsed = false;
 
-        // --- FUNÇÕES AUXILIARES ---
+        // --- FUNÇÕES AUXILIARES ---
 
-        /**
-         * Analisa uma linha de CSV, lidando com campos entre aspas.
-         * @param {string} line A linha do CSV.
-         * @returns {string[]} Um array de valores.
-         */
-        function parseCsvLine(line) {
-            const result = [];
-            let inQuote = false;
-            let currentField = '';
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    inQuote = !inQuote;
-                    if (!inQuote && line[i + 1] === '"') {
-                        currentField += '"';
-                        i++;
-                    }
-                } else if (char === ',' && !inQuote) {
-                    result.push(currentField.trim());
-                    currentField = '';
-                } else {
-                    currentField += char;
-                }
-            }
-            result.push(currentField.trim());
-            return result;
-        }
+        /**
+         * Analisa uma linha de CSV, lidando com campos entre aspas.
+         * @param {string} line A linha do CSV.
+         * @returns {string[]} Um array de valores.
+         */
+        function parseCsvLine(line) {
+            const result = [];
+            let inQuote = false;
+            let currentField = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuote = !inQuote;
+                    if (!inQuote && line[i + 1] === '"') {
+                        currentField += '"';
+                        i++;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    result.push(currentField.trim());
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            result.push(currentField.trim());
+            return result;
+        }
 
-        /**
-         * Adiciona um atraso.
-         * @param {number} ms O tempo de espera em milissegundos.
-         */
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+        /**
+         * Adiciona um atraso.
+         * @param {number} ms O tempo de espera em milissegundos.
+         */
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
-        /**
-         * Busca e processa um arquivo CSV de uma URL, com tentativas de re-conexão.
-         * @param {string} url A URL do CSV.
-         * @param {number} retries O número de tentativas restantes.
-         * @returns {Promise<Object[]>} Uma promessa que resolve para um array de objetos.
-         */
-        async function fetchAndParseCsv(url, retries = MAX_RETRIES) {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP! Status: ${response.status}`);
-                }
-                const csvText = await response.text();
-                // A CORREÇÃO PRINCIPAL ESTÁ AQUI: Remove o caractere de retorno de carro antes de dividir a string.
-                const lines = csvText.replace(/\r/g, '').split('\n').filter(line => line.trim() !== '');
-                if (lines.length <= 1) {
-                    console.warn(`O CSV da URL "${url}" não contém dados válidos.`);
-                    return [];
-                }
-                const headers = parseCsvLine(lines[0]).map(header => header.trim());
-                
-                const data = [];
-                for (const line of lines.slice(1)) {
-                    const values = parseCsvLine(line);
-                    if (values.length >= headers.length) {
-                        const row = {};
-                        headers.forEach((header, index) => {
-                            row[header] = values[index];
-                        });
-                        data.push(row);
-                    }
-                }
-                return data;
-            } catch (error) {
-                console.error(`Tentativa ${MAX_RETRIES - retries + 1} falhou ao buscar ou analisar o CSV de ${url}:`, error);
-                if (retries > 0) {
-                    // Espera um pouco antes de tentar novamente
-                    await delay(1000 * (MAX_RETRIES - retries + 1)); 
-                    return fetchAndParseCsv(url, retries - 1);
-                }
-                // Se todas as tentativas falharem, retorna um array vazio
-                return []; 
-            }
-        }
+        /**
+         * Busca e processa um arquivo CSV de uma URL, com tentativas de re-conexão.
+         * @param {string} url A URL do CSV.
+         * @param {number} retries O número de tentativas restantes.
+         * @returns {Promise<Object[]>} Uma promessa que resolve para um array de objetos.
+         */
+        async function fetchAndParseCsv(url, retries = MAX_RETRIES) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! Status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                // A CORREÇÃO PRINCIPAL ESTÁ AQUI: Remove o caractere de retorno de carro antes de dividir a string.
+                const lines = csvText.replace(/\r/g, '').split('\n').filter(line => line.trim() !== '');
+                if (lines.length <= 1) {
+                    console.warn(`O CSV da URL "${url}" não contém dados válidos.`);
+                    return [];
+                }
+                const headers = parseCsvLine(lines[0]).map(header => header.trim());
+                
+                const data = [];
+                for (const line of lines.slice(1)) {
+                    const values = parseCsvLine(line);
+                    if (values.length >= headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index];
+                        });
+                        data.push(row);
+                    }
+                }
+                return data;
+            } catch (error) {
+                console.error(`Tentativa ${MAX_RETRIES - retries + 1} falhou ao buscar ou analisar o CSV de ${url}:`, error);
+                if (retries > 0) {
+                    // Espera um pouco antes de tentar novamente
+                    await delay(1000 * (MAX_RETRIES - retries + 1)); 
+                    return fetchAndParseCsv(url, retries - 1);
+                }
+                // Se todas as tentativas falharem, retorna um array vazio
+                return []; 
+            }
+        }
 
-        /**
-         * Exibe uma oferta aleatória no banner.
-         */
-        function updateOffer() {
-            if (offersData.length === 0) {
-                console.warn("Nenhuma oferta disponível para exibir no carrossel.");
-                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
-                return;
-            } else {
-                contentSection.style.display = 'flex';
-            }
+        /**
+         * Exibe uma oferta aleatória no banner.
+         */
+        function updateOffer() {
+            if (offersData.length === 0) {
+                console.warn("Nenhuma oferta disponível para exibir no carrossel.");
+                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
+                return;
+            } else {
+                contentSection.style.display = 'flex';
+            }
 
-            contentWrapper.style.opacity = '0';
+            contentWrapper.style.opacity = '0';
 
-            setTimeout(() => {
-                const randomIndex = Math.floor(Math.random() * offersData.length);
-                const randomOffer = offersData[randomIndex];
-                
-                if (randomOffer) {
-                    const itemName = randomOffer['Item_Name'];
-                    const offerLink = randomOffer['Offer_Link'];
-                    const imgUrl = randomOffer['img'];
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * offersData.length);
+                const randomOffer = offersData[randomIndex];
+                
+                if (randomOffer) {
+                    const itemName = randomOffer['Item_Name'];
+                    const offerLink = randomOffer['Offer_Link'];
+                    const imgUrl = randomOffer['img'];
 
-                    contentTitleElement.textContent = itemName || "Oferta Especial";
-                    
-                    if (imgUrl && imgUrl.trim() !== '') {
-                        contentImage.src = imgUrl;
-                    } else {
-                        contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
-                    }
-                    ctaButton.href = offerLink || "#";
-                    ctaButton.setAttribute('target', '_blank');
-                    ctaButton.setAttribute('rel', 'noopener noreferrer');
-                }
-                contentWrapper.style.opacity = '1';
-            }, 500);
-        }
+                    contentTitleElement.textContent = itemName || "Oferta Especial";
+                    
+                    if (imgUrl && imgUrl.trim() !== '') {
+                        contentImage.src = imgUrl;
+                    } else {
+                        contentImage.src = "https://placehold.co/120x120/E0E0E0/808080?text=Sem+Imagem";
+                    }
+                    ctaButton.href = offerLink || "#";
+                    ctaButton.setAttribute('target', '_blank');
+                    ctaButton.setAttribute('rel', 'noopener noreferrer');
+                }
+                contentWrapper.style.opacity = '1';
+            }, 500);
+        }
 
-        /**
-         * Busca os dados das ofertas, usando cache, e inicia a rotação do banner.
-         */
-        async function fetchOffersAndStartRotation() {
-            let cachedData = sessionStorage.getItem(OFFERS_CACHE_KEY);
-            let cachedTime = sessionStorage.getItem(`${OFFERS_CACHE_KEY}_time`);
+        /**
+         * Busca os dados das ofertas, usando cache, e inicia a rotação do banner.
+         */
+        async function fetchOffersAndStartRotation() {
+            let cachedData = sessionStorage.getItem(OFFERS_CACHE_KEY);
+            let cachedTime = sessionStorage.getItem(`${OFFERS_CACHE_KEY}_time`);
 
-            if (cachedData && cachedTime && (Date.now() - cachedTime < OFFERS_CACHE_EXPIRY)) {
-                offersData = JSON.parse(cachedData);
-            } else {
-                try {
-                    const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
-                    offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
+            if (cachedData && cachedTime && (Date.now() - cachedTime < OFFERS_CACHE_EXPIRY)) {
+                offersData = JSON.parse(cachedData);
+            } else {
+                try {
+                    const rawOffersData = await fetchAndParseCsv(OFFERS_CSV_URL);
+                    offersData = rawOffersData.filter(offer => offer.img && offer.img.trim() !== '');
 
-                    if (offersData.length > 0) {
-                        sessionStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offersData));
-                        sessionStorage.setItem(`${OFFERS_CACHE_KEY}_time`, Date.now());
-                    } else {
-                        offersData = [];
-                    }
-                } catch (error) {
-                    offersData = [];
-                }
-            }
+                    if (offersData.length > 0) {
+                        sessionStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offersData));
+                        sessionStorage.setItem(`${OFFERS_CACHE_KEY}_time`, Date.now());
+                    } else {
+                        offersData = [];
+                    }
+                } catch (error) {
+                    offersData = [];
+                }
+            }
 
-            if (offersData.length > 0) {
-                updateOffer();
-                if (offerIntervalId) {
-                    clearInterval(offerIntervalId);
-                }
-                offerIntervalId = setInterval(updateOffer, 10000);
-            } else {
-                if (offerIntervalId) {
-                    clearInterval(offerIntervalId);
-                }
-                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
-            }
-        }
-        
-        /**
-         * Renderiza o conteúdo da notícia na área alternativa.
-         * @param {Object} rowData O objeto de dados da linha do CSV.
-         */
-        function renderNewsContent(rowData) {
-            newsArea.style.display = 'flex';
-            iframeArea.style.display = 'none';
+            if (offersData.length > 0) {
+                updateOffer();
+                if (offerIntervalId) {
+                    clearInterval(offerIntervalId);
+                }
+                offerIntervalId = setInterval(updateOffer, 10000);
+            } else {
+                if (offerIntervalId) {
+                    clearInterval(offerIntervalId);
+                }
+                contentSection.style.display = 'none'; // Oculta a seção inteira se não houver ofertas
+            }
+        }
+        
+        /**
+         * Renderiza o conteúdo da notícia na área alternativa.
+         * @param {Object} rowData O objeto de dados da linha do CSV.
+         */
+        function renderNewsContent(rowData) {
+            newsArea.style.display = 'flex';
+            iframeArea.style.display = 'none';
 
-            newsTitle.textContent = rowData ? (rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível') : 'Conteúdo indisponível';
-            newsDescription.textContent = 'Lamentamos, mas não foi possível carregar o conteúdo. Por favor, tente recarregar a página.';
+            newsTitle.textContent = rowData ? (rowData['título'] || rowData['titulo'] || 'Conteúdo indisponível') : 'Conteúdo indisponível';
+            newsDescription.textContent = 'Lamentamos, mas não foi possível carregar o conteúdo. Por favor, tente recarregar a página.';
 
-            const imageFromCSV = rowData ? (rowData['img_feed'] || '') : '';
-            if (imageFromCSV && imageFromCSV.trim() !== '') {
-                newsImage.src = imageFromCSV;
-            } else {
-                newsImage.src = "https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem";
-            }
-        }
+            const imageFromCSV = rowData ? (rowData['img_feed'] || '') : '';
+            if (imageFromCSV && imageFromCSV.trim() !== '') {
+                newsImage.src = imageFromCSV;
+            } else {
+                newsImage.src = "https://placehold.co/400x250/E0E0E0/808080?text=Sem+Imagem";
+            }
+        }
 
-        /**
-         * Busca os dados da URL principal e atualiza o iframe, com timeout.
-         * * A função `fetchData` é o coração da sua aplicação. Ela:
-         * 1. Pega o `id` da URL.
-         * 2. Busca os dados do seu CSV principal.
-         * 3. Encontra a linha correspondente ao `id`.
-         * 4. Se encontrar, tenta carregar o `iframe` com o link do CSV.
-         * 5. Usa um `Promise.race` com um timeout para garantir que, se o iframe não carregar em 30 segundos,
-         * a área de notícias alternativa seja exibida.
-         * 6. Se o `iframe` carregar, a área de notícias é ocultada. Se falhar, ela é exibida.
-         * * Esta função é chamada tanto no carregamento inicial da página quanto
-         * sempre que o botão "Recarregar" é clicado, o que garante a
-         * funcionalidade de "re-tentativa" de carregamento.
-         */
-        async function fetchData() {
-            // Adiciona feedback visual ao botão de recarregar
-            reloadButton.textContent = 'Carregando...';
-            reloadButton.disabled = true;
+        /**
+         * Busca os dados da URL principal e atualiza o iframe, com timeout.
+         * * A função `fetchData` é o coração da sua aplicação. Ela:
+         * 1. Pega o `id` da URL.
+         * 2. Busca os dados do seu CSV principal.
+         * 3. Encontra a linha correspondente ao `id`.
+         * 4. Se encontrar, tenta carregar o `iframe` com o link do CSV.
+         * 5. Usa um `Promise.race` com um timeout para garantir que, se o iframe não carregar em 30 segundos,
+         * a área de notícias alternativa seja exibida.
+         * 6. Se o `iframe` carregar, a área de notícias é ocultada. Se falhar, ela é exibida.
+         * * Esta função é chamada tanto no carregamento inicial da página quanto
+         * sempre que o botão "Recarregar" é clicado, o que garante a
+         * funcionalidade de "re-tentativa" de carregamento.
+         */
+        async function fetchData() {
+            // Adiciona feedback visual ao botão de recarregar
+            reloadButton.textContent = 'Carregando...';
+            reloadButton.disabled = true;
 
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const idFromUrl = urlParams.get('id');
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const idFromUrl = urlParams.get('id');
 
-                // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
-                if (!idFromUrl) {
-                    renderNewsContent(null);
-                    return;
-                }
-                
-                // Tenta buscar os dados com a nova lógica de re-conexão
-                const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
-                
-                const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
+                // Se não houver ID na URL, o script exibe a mensagem de conteúdo indisponível
+                if (!idFromUrl) {
+                    renderNewsContent(null);
+                    return;
+                }
+                
+                // Tenta buscar os dados com a nova lógica de re-conexão
+                const mainData = await fetchAndParseCsv(MAIN_CSV_URL);
+                
+                const rowData = mainData.find(row => (row.id && row.id.trim() === idFromUrl.trim()) || (row.Item_Id && row.Item_Id.trim() === idFromUrl.trim()));
 
-                if (!rowData) {
-                    renderNewsContent(null);
-                    return;
-                }
+                if (!rowData) {
+                    renderNewsContent(null);
+                    return;
+                }
 
-                const titleFromCSV = rowData['título'] || rowData['titulo'] || 'Mosaico Top';
-                document.querySelector('head title').textContent = titleFromCSV;
-                
-                const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
+                const titleFromCSV = rowData['título_chamada'] || rowData['titulo_chamada'] || 'Mosaico Top';
+                document.querySelector('head title').textContent = titleFromCSV;
+                
+                const iframeLinkFromCSV = rowData['link_chamada'] || rowData['link'];
 
-                // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
-                if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
-                    renderNewsContent(rowData);
-                    return;
-                }
+                // Se o link do iframe não existir ou for inválido, exibe o conteúdo alternativo imediatamente.
+                if (!iframeLinkFromCSV || iframeLinkFromCSV.trim() === '') {
+                    renderNewsContent(rowData);
+                    return;
+                }
 
-                const iframeLoadPromise = new Promise((resolve, reject) => {
-                    iframeElement.onload = () => resolve('success');
-                    iframeElement.onerror = () => reject(new Error('Falha no carregamento do iframe.'));
-                    iframeElement.src = iframeLinkFromCSV;
-                });
-                
-                const timeoutPromise = new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        reject(new Error('Timeout! O iframe demorou para carregar.'));
-                    }, IFRAME_TIMEOUT);
-                });
+                const iframeLoadPromise = new Promise((resolve, reject) => {
+                    iframeElement.onload = () => resolve('success');
+                    iframeElement.onerror = () => reject(new Error('Falha no carregamento do iframe.'));
+                    iframeElement.src = iframeLinkFromCSV;
+                });
+                
+                const timeoutPromise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Timeout! O iframe demorou para carregar.'));
+                    }, IFRAME_TIMEOUT);
+                });
 
-                try {
-                    await Promise.race([iframeLoadPromise, timeoutPromise]);
-                    // Se o iframe carregar, ocultamos a área de notícias e exibimos o iframe
-                    newsArea.style.display = 'none';
-                    iframeArea.style.display = 'flex';
-                    iframeElement.title = titleFromCSV;
-                } catch (error) {
-                    renderNewsContent(rowData);
-                }
-            } finally {
-                // Remove o feedback visual, independentemente do sucesso ou falha
-                reloadButton.textContent = 'Recarregar';
-                reloadButton.disabled = false;
-            }
-        }
+                try {
+                    await Promise.race([iframeLoadPromise, timeoutPromise]);
+                    // Se o iframe carregar, ocultamos a área de notícias e exibimos o iframe
+                    newsArea.style.display = 'none';
+                    iframeArea.style.display = 'flex';
+                    iframeElement.title = titleFromCSV;
+                } catch (error) {
+                    renderNewsContent(rowData);
+                }
+            } finally {
+                // Remove o feedback visual, independentemente do sucesso ou falha
+                reloadButton.textContent = 'Recarregar';
+                reloadButton.disabled = false;
+            }
+        }
 
-        /**
-         * Alterna o estado do carrossel entre recolhido e expandido.
-         */
-        function toggleCollapse() {
-            isCollapsed = !isCollapsed;
-            if (isCollapsed) {
-                mainContainer.classList.add('collapsed');
-                collapseIconDown.style.display = 'block';
-                collapseIconUp.style.display = 'none';
-                collapseButton.title = "Expandir Carrossel";
-            } else {
-                mainContainer.classList.remove('collapsed');
-                collapseIconDown.style.display = 'none';
-                collapseIconUp.style.display = 'block';
-                collapseButton.title = "Recolher Carrossel";
-            }
-        }
+        /**
+         * Alterna o estado do carrossel entre recolhido e expandido.
+         */
+        function toggleCollapse() {
+            isCollapsed = !isCollapsed;
+            if (isCollapsed) {
+                mainContainer.classList.add('collapsed');
+                collapseIconDown.style.display = 'block';
+                collapseIconUp.style.display = 'none';
+                collapseButton.title = "Expandir Carrossel";
+            } else {
+                mainContainer.classList.remove('collapsed');
+                collapseIconDown.style.display = 'none';
+                collapseIconUp.style.display = 'block';
+                collapseButton.title = "Recolher Carrossel";
+            }
+        }
 
-        // --- INÍCIO DA EXECUÇÃO ---
-        window.onload = function() {
-            // Inicia o carregamento do conteúdo principal e das ofertas
-            fetchData();
-            fetchOffersAndStartRotation();
-            // Adiciona os event listeners
-            collapseButton.addEventListener('click', toggleCollapse);
-            // Este event listener é o que faz o botão de recarregar funcionar.
-            // Ele chama a função fetchData, que re-executa toda a lógica de carregamento.
-            reloadButton.addEventListener('click', fetchData);
-        };
-    </script>
+        // --- INÍCIO DA EXECUÇÃO ---
+        window.onload = function() {
+            // Inicia o carregamento do conteúdo principal e das ofertas
+            fetchData();
+            fetchOffersAndStartRotation();
+            // Adiciona os event listeners
+            collapseButton.addEventListener('click', toggleCollapse);
+            // Este event listener é o que faz o botão de recarregar funcionar.
+            // Ele chama a função fetchData, que re-executa toda a lógica de carregamento.
+            reloadButton.addEventListener('click', fetchData);
+        };
+    </script>
 </body>
 </html>
