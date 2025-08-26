@@ -319,11 +319,9 @@
 
     <script>
         // --- CONSTANTES E ELEMENTOS DO DOM ---
-       // const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=0&single=true&output=csv";
-       // const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyYX_HnpqLYNklSBCTsPcrMHvZHooQqG7fO8sd5bZ0I_gsDK3hHNEVWRT3VYRF8yG_eVjydaMe1-r6/pub?gid=1150732258&single=true&output=csv";
-
+        // A lógica de URLs foi movida para este script.
         const MAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=0";
-        const OFFERS_CSV_URL = "https://docs.google.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=1150732258";
+        const OFFERS_CSV_URL = "https://docs.com/spreadsheets/d/1S_BVbwRlP4Vpin5clCRC_2ILZTBzuhvqLQrSgUcfPxM/export?format=csv&gid=1150732258";
         const IFRAME_TIMEOUT = 30000; // Aumentado para 30 segundos
         const OFFERS_CACHE_KEY = 'mosaico_offers_data';
         const OFFERS_CACHE_EXPIRY = 3600000; // 1 hora em milissegundos
@@ -404,7 +402,8 @@
                     throw new Error(`Erro HTTP! Status: ${response.status}`);
                 }
                 const csvText = await response.text();
-                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                // A CORREÇÃO PRINCIPAL ESTÁ AQUI: Remove o caractere de retorno de carro antes de dividir a string.
+                const lines = csvText.replace(/\r/g, '').split('\n').filter(line => line.trim() !== '');
                 if (lines.length <= 1) {
                     console.warn(`O CSV da URL "${url}" não contém dados válidos.`);
                     return [];
